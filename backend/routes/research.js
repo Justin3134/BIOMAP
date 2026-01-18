@@ -37,10 +37,10 @@ router.post('/map/:projectId', async (req, res) => {
         }
 
         console.log('🔍 Step A: Searching for research papers...');
-        
+
         let papers = [];
         let useAIGenerated = false;
-        
+
         // Try Semantic Scholar first
         try {
             const searchQuery = project.summary;
@@ -85,12 +85,12 @@ router.post('/map/:projectId', async (req, res) => {
         console.log(`✅ Found ${papers.length} papers (${useAIGenerated ? 'AI-generated' : 'from Semantic Scholar'})`);
 
         let labeledClusters;
-        
+
         if (useAIGenerated) {
             // For AI-generated papers, use approach-based clustering (faster, no embeddings needed)
             console.log('🗂️ Clustering AI papers by approach...');
             const clusters = clusterByApproach(papers, 5);
-            
+
             labeledClusters = clusters.map(cluster => ({
                 branch_id: cluster.cluster_id,
                 label: cluster.label,
