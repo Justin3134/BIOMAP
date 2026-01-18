@@ -18,6 +18,8 @@ import DetailPanel from "./DetailPanel";
 import InsightPanel from "./InsightPanel";
 import ComparePanel from "./ComparePanel";
 import ChatSidebar from "./ChatSidebar";
+import NoveltyRadar from "./NoveltyRadar";
+import FeasibilityPanel from "./FeasibilityPanel";
 import { mockProjects, clusters } from "@/data/mockResearch";
 import { ResearchProject } from "@/types/research";
 import { ArrowLeft } from "lucide-react";
@@ -245,8 +247,10 @@ const ResearchLandscape = ({ userQuery, onReset }: ResearchLandscapeProps) => {
           />
         </ReactFlow>
 
-        {/* Insight panel - bottom left */}
-        <div className="absolute bottom-6 left-6 z-10" style={{ marginBottom: pinnedProjects.length > 0 ? '180px' : '0' }}>
+        {/* Left panels stack */}
+        <div className="absolute bottom-6 left-6 z-10 flex flex-col gap-3" style={{ marginBottom: pinnedProjects.length > 0 ? '200px' : '0' }}>
+          <NoveltyRadar clusters={clusters} projects={mockProjects} />
+          <FeasibilityPanel clusters={clusters} projects={mockProjects} />
           <InsightPanel />
         </div>
 
