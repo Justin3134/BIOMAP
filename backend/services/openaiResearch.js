@@ -57,7 +57,10 @@ Return ONLY a valid JSON array of papers in this exact format:
     });
 
     const content = response.choices[0].message.content;
+    console.log('📝 OpenAI Response:', content.substring(0, 500));
     const parsed = JSON.parse(content);
+    console.log('📦 Parsed type:', Array.isArray(parsed) ? 'array' : 'object');
+    console.log('📦 Parsed keys:', Object.keys(parsed));
     
     // Handle both array and object with papers array
     const papers = Array.isArray(parsed) ? parsed : (parsed.papers || []);
