@@ -17,6 +17,7 @@ import ProjectNode from "./nodes/ProjectNode";
 import DetailPanel from "./DetailPanel";
 import InsightPanel from "./InsightPanel";
 import ComparePanel from "./ComparePanel";
+import ChatSidebar from "./ChatSidebar";
 import { mockProjects, clusters } from "@/data/mockResearch";
 import { ResearchProject } from "@/types/research";
 import { ArrowLeft } from "lucide-react";
@@ -35,6 +36,7 @@ const nodeTypes = {
 const ResearchLandscape = ({ userQuery, onReset }: ResearchLandscapeProps) => {
   const [selectedProject, setSelectedProject] = useState<ResearchProject | null>(null);
   const [pinnedProjects, setPinnedProjects] = useState<ResearchProject[]>([]);
+  const [chatContext, setChatContext] = useState<ResearchProject[]>([]);
 
   const handleSelectProject = useCallback((project: ResearchProject) => {
     setSelectedProject(project);
@@ -47,7 +49,7 @@ const ResearchLandscape = ({ userQuery, onReset }: ResearchLandscapeProps) => {
         return prev.filter(p => p.id !== project.id);
       }
       if (prev.length >= 3) {
-        return [...prev.slice(1), project]; // Remove oldest, add new
+        return [...prev.slice(1), project];
       }
       return [...prev, project];
     });
@@ -59,6 +61,39 @@ const ResearchLandscape = ({ userQuery, onReset }: ResearchLandscapeProps) => {
 
   const handleClearPins = useCallback(() => {
     setPinnedProjects([]);
+  }, []);
+
+  // Chat context handlers
+  const handleAddToContext = useCallback((project: ResearchProject) => {
+    setChatContext(prev => {
+      const isAlreadyInContext = prev.some(p => p.id === project.id);
+      if (isAlreadyInContext) {
+        return prev.filter(p => p.id !== project.id);
+      }
+      if (prev.length >= 3) {
+        return [...prev.slice(1), project];
+      }
+      return [...prev, project];
+    });
+  }, []);
+
+  const handleRemoveFromContext = useCallback((projectId: string) => {
+    setChatContext(prev => prev.filter(p => p.id !== projectId));
+  }, []);
+
+  const handleAskAboutText = useCallback((text: string, project: ResearchProject) => {
+    // Add project to context if not already there
+    setChatContext(prev => {
+      if (!prev.some(p => p.id === project.id)) {
+        if (prev.length >= 3) {
+          return [...prev.slice(1), project];
+        }
+        return [...prev, project];
+      }
+      return prev;
+    });
+    // The chat will handle the highlighted text through its own state
+    console.log("Ask about:", text, "from project:", project.title);
   }, []);
 
   // Build nodes and edges
@@ -223,13 +258,22 @@ const ResearchLandscape = ({ userQuery, onReset }: ResearchLandscapeProps) => {
         />
       </div>
 
-      {/* Detail panel - right side */}
+      {/* Detail panel - slides in from right when project selected */}
       {selectedProject && (
         <DetailPanel
           project={selectedProject}
           onClose={() => setSelectedProject(null)}
+          onAddToContext={handleAddToContext}
+          onAskAboutText={handleAskAboutText}
+          isInContext={chatContext.some(p => p.id === selectedProject.id)}
         />
       )}
+
+      {/* Chat Sidebar - always visible on the right */}
+      <ChatSidebar
+        contextProjects={chatContext}
+        onRemoveContext={handleRemoveFromContext}
+      />
     </div>
   );
 };

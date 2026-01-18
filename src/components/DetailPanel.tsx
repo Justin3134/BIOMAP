@@ -1,18 +1,69 @@
+import { useState, useCallback } from "react";
 import { ResearchProject } from "@/types/research";
-import { X, ExternalLink, CheckCircle, XCircle, Lightbulb, Link2 } from "lucide-react";
+import { X, ExternalLink, CheckCircle, XCircle, Lightbulb, Link2, MessageSquare, Plus } from "lucide-react";
 
 interface DetailPanelProps {
   project: ResearchProject | null;
   onClose: () => void;
+  onAddToContext?: (project: ResearchProject) => void;
+  onAskAboutText?: (text: string, project: ResearchProject) => void;
+  isInContext?: boolean;
 }
 
-const DetailPanel = ({ project, onClose }: DetailPanelProps) => {
+const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInContext }: DetailPanelProps) => {
+  const [selectedText, setSelectedText] = useState<string>("");
+  const [showAskButton, setShowAskButton] = useState(false);
+  const [askButtonPosition, setAskButtonPosition] = useState({ x: 0, y: 0 });
+
+  const handleTextSelection = useCallback(() => {
+    const selection = window.getSelection();
+    const text = selection?.toString().trim();
+    
+    if (text && text.length > 0) {
+      setSelectedText(text);
+      const range = selection?.getRangeAt(0);
+      const rect = range?.getBoundingClientRect();
+      if (rect) {
+        setAskButtonPosition({ x: rect.left + rect.width / 2, y: rect.top - 10 });
+        setShowAskButton(true);
+      }
+    } else {
+      setShowAskButton(false);
+      setSelectedText("");
+    }
+  }, []);
+
+  const handleAskAboutSelection = () => {
+    if (selectedText && project && onAskAboutText) {
+      onAskAboutText(selectedText, project);
+      setShowAskButton(false);
+      setSelectedText("");
+      window.getSelection()?.removeAllRanges();
+    }
+  };
+
   if (!project) return null;
 
   const similarityPercent = Math.round(project.similarity * 100);
 
   return (
-    <div className="detail-panel w-[400px] p-6 slide-in-right">
+    <div className="detail-panel w-[400px] p-6 slide-in-right relative" onMouseUp={handleTextSelection}>
+      {/* Floating Ask Button */}
+      {showAskButton && onAskAboutText && (
+        <div
+          className="fixed z-50 transform -translate-x-1/2 -translate-y-full"
+          style={{ left: askButtonPosition.x, top: askButtonPosition.y }}
+        >
+          <button
+            onClick={handleAskAboutSelection}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground text-xs font-medium rounded-full shadow-lg hover:bg-primary/90 transition-colors"
+          >
+            <MessageSquare className="w-3 h-3" />
+            Ask AI about this
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div className="flex-1 pr-4">
@@ -33,6 +84,30 @@ const DetailPanel = ({ project, onClose }: DetailPanelProps) => {
           <X className="w-5 h-5 text-muted-foreground" />
         </button>
       </div>
+
+      {/* Add to Context Button */}
+      {onAddToContext && (
+        <button
+          onClick={() => onAddToContext(project)}
+          className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg mb-4 transition-colors ${
+            isInContext
+              ? "bg-primary/10 text-primary border border-primary/20"
+              : "bg-secondary hover:bg-secondary/80 text-foreground"
+          }`}
+        >
+          {isInContext ? (
+            <>
+              <CheckCircle className="w-4 h-4" />
+              <span className="text-sm font-medium">In Chat Context</span>
+            </>
+          ) : (
+            <>
+              <Plus className="w-4 h-4" />
+              <span className="text-sm font-medium">Add to Chat Context</span>
+            </>
+          )}
+        </button>
+      )}
 
       {/* Similarity indicator */}
       <div className="bg-secondary rounded-lg p-3 mb-6">
