@@ -14,12 +14,16 @@ const Index = () => {
     setIntake(null);
   }, []);
 
+  const handleUpdateIntake = useCallback((updatedIntake: ProjectIntake) => {
+    setIntake(updatedIntake);
+  }, []);
+
   // Show wizard if no intake, otherwise show workspace
   if (!intake) {
     return <ProjectIntakeWizard onComplete={handleIntakeComplete} />;
   }
 
-  return <WorkspaceLayout intake={intake} onReset={handleReset} />;
+  return <WorkspaceLayout intake={intake} onReset={handleReset} onUpdateIntake={handleUpdateIntake} />;
 };
 
 export default Index;
