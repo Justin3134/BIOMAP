@@ -333,7 +333,7 @@ const WorkspaceLayout = ({ intake, onReset, onUpdateIntake }: WorkspaceLayoutPro
   return (
     <div className="h-screen flex bg-background">
       {/* Left Sidebar */}
-      <WorkspaceSidebar projectGoal={intake.goal} />
+      <WorkspaceSidebar projectTitle={intake.title} />
 
       {/* Main Content */}
       <div className="flex-1 flex">

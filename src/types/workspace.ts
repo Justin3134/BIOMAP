@@ -1,5 +1,6 @@
 export interface ProjectIntake {
   // Step 1: Project Goal
+  title: string;
   goal: string;
   successCriteria: string;
   

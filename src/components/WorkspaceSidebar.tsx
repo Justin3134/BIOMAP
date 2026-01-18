@@ -17,10 +17,10 @@ const NAV_ITEMS = [
 ];
 
 interface WorkspaceSidebarProps {
-  projectGoal: string;
+  projectTitle: string;
 }
 
-const WorkspaceSidebar = ({ projectGoal }: WorkspaceSidebarProps) => {
+const WorkspaceSidebar = ({ projectTitle }: WorkspaceSidebarProps) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const location = useLocation();
 
@@ -36,7 +36,7 @@ const WorkspaceSidebar = ({ projectGoal }: WorkspaceSidebarProps) => {
               Project
             </span>
             <h2 className="font-serif font-semibold text-foreground text-sm mt-1 line-clamp-2">
-              {projectGoal.slice(0, 50)}{projectGoal.length > 50 ? "..." : ""}
+              {projectTitle || "Untitled Project"}
             </h2>
           </div>
         )}

@@ -90,7 +90,7 @@ const NoveltyRadar = ({ clusters, projects }: NoveltyRadarProps) => {
       </button>
 
       {isExpanded && (
-        <div className="p-3 pt-0 space-y-3">
+        <div className="p-3 pt-0 space-y-3 max-h-[300px] overflow-y-auto">
           {/* Gap Map */}
           <div className="space-y-2">
             <span className="text-xs font-medium text-muted-foreground">Gap Analysis</span>
