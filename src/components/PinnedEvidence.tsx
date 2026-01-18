@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { PinnedEvidence as PinnedEvidenceType } from "@/types/workspace";
 import { mockProjects } from "@/data/mockResearch";
-import { Pin, Search, Tag, X, ExternalLink, Plus } from "lucide-react";
+import { Pin, Search, Tag, X, ExternalLink, Plus, Check } from "lucide-react";
 
 interface PinnedEvidenceProps {
   evidence: PinnedEvidenceType[];
@@ -9,11 +9,11 @@ interface PinnedEvidenceProps {
   onUpdateTags: (id: string, tags: string[]) => void;
 }
 
-const AVAILABLE_TAGS = ["Method", "Risk", "Key Result", "Use Later", "Important", "Review"];
-
 const PinnedEvidence = ({ evidence, onRemove, onUpdateTags }: PinnedEvidenceProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [editingTagId, setEditingTagId] = useState<string | null>(null);
+  const [newTagValue, setNewTagValue] = useState("");
 
   const filteredEvidence = evidence.filter(item => {
     const matchesSearch = item.projectTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -23,6 +23,24 @@ const PinnedEvidence = ({ evidence, onRemove, onUpdateTags }: PinnedEvidenceProp
   });
 
   const allTags = [...new Set(evidence.flatMap(e => e.tags))];
+
+  const handleAddTag = (itemId: string) => {
+    if (newTagValue.trim()) {
+      const item = evidence.find(e => e.id === itemId);
+      if (item && !item.tags.includes(newTagValue.trim())) {
+        onUpdateTags(itemId, [...item.tags, newTagValue.trim()]);
+      }
+      setNewTagValue("");
+      setEditingTagId(null);
+    }
+  };
+
+  const handleRemoveTag = (itemId: string, tagToRemove: string) => {
+    const item = evidence.find(e => e.id === itemId);
+    if (item) {
+      onUpdateTags(itemId, item.tags.filter(t => t !== tagToRemove));
+    }
+  };
 
   return (
     <div className="h-full flex flex-col">
@@ -99,6 +117,7 @@ const PinnedEvidence = ({ evidence, onRemove, onUpdateTags }: PinnedEvidenceProp
           <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
             {filteredEvidence.map(item => {
               const project = mockProjects.find(p => p.id === item.projectId);
+              const isEditingThis = editingTagId === item.id;
               
               return (
                 <div key={item.id} className="bg-card border border-border rounded-xl p-5">
@@ -128,24 +147,65 @@ const PinnedEvidence = ({ evidence, onRemove, onUpdateTags }: PinnedEvidenceProp
                     {item.tags.map(tag => (
                       <span
                         key={tag}
-                        className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full"
+                        className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full group"
                       >
                         <Tag className="w-2.5 h-2.5" />
                         {tag}
+                        <button
+                          onClick={() => handleRemoveTag(item.id, tag)}
+                          className="ml-0.5 hover:text-destructive transition-colors"
+                        >
+                          <X className="w-2.5 h-2.5" />
+                        </button>
                       </span>
                     ))}
-                    <button
-                      onClick={() => {
-                        const newTag = AVAILABLE_TAGS.find(t => !item.tags.includes(t));
-                        if (newTag) {
-                          onUpdateTags(item.id, [...item.tags, newTag]);
-                        }
-                      }}
-                      className="inline-flex items-center gap-1 px-2 py-0.5 bg-secondary text-muted-foreground text-xs rounded-full hover:bg-secondary/80 transition-colors"
-                    >
-                      <Plus className="w-2.5 h-2.5" />
-                      Add tag
-                    </button>
+                    
+                    {isEditingThis ? (
+                      <div className="inline-flex items-center gap-1">
+                        <input
+                          type="text"
+                          value={newTagValue}
+                          onChange={(e) => setNewTagValue(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") handleAddTag(item.id);
+                            if (e.key === "Escape") {
+                              setEditingTagId(null);
+                              setNewTagValue("");
+                            }
+                          }}
+                          placeholder="Tag name..."
+                          autoFocus
+                          className="w-24 px-2 py-0.5 bg-secondary border-0 rounded-full text-xs focus:outline-none focus:ring-2 focus:ring-primary/20"
+                        />
+                        <button
+                          onClick={() => handleAddTag(item.id)}
+                          disabled={!newTagValue.trim()}
+                          className="p-1 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors disabled:opacity-50"
+                        >
+                          <Check className="w-2.5 h-2.5" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingTagId(null);
+                            setNewTagValue("");
+                          }}
+                          className="p-1 bg-secondary text-muted-foreground rounded-full hover:bg-secondary/80 transition-colors"
+                        >
+                          <X className="w-2.5 h-2.5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setEditingTagId(item.id);
+                          setNewTagValue("");
+                        }}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 bg-secondary text-muted-foreground text-xs rounded-full hover:bg-secondary/80 transition-colors"
+                      >
+                        <Plus className="w-2.5 h-2.5" />
+                        Add tag
+                      </button>
+                    )}
                   </div>
 
                   {item.notes && (
