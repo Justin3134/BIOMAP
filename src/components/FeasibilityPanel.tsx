@@ -44,7 +44,7 @@ interface ClusterFeasibility {
 }
 
 const FeasibilityPanel = ({ clusters, projects }: FeasibilityPanelProps) => {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [selectedConstraints, setSelectedConstraints] = useState<string[]>(["compute", "budget_mid", "time_mid"]);
 
   const toggleConstraint = (id: string) => {
