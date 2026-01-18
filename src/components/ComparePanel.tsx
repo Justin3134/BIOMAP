@@ -48,7 +48,7 @@ const ComparePanel = ({ projects, onRemove, onClear }: ComparePanelProps) => {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t border-border shadow-lg z-40 slide-up">
+    <div className="fixed bottom-0 left-0 right-[360px] bg-card/95 backdrop-blur-sm border-t border-border shadow-lg z-40 slide-up max-h-[200px] overflow-auto">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-3 border-b border-border">
         <div className="flex items-center gap-2">
