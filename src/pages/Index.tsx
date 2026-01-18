@@ -1,8 +1,6 @@
 import { useState, useCallback } from "react";
 import ResearchInput from "@/components/ResearchInput";
-import ResearchLandscape from "@/components/ResearchLandscape";
-import EmptyState from "@/components/EmptyState";
-import { clusters } from "@/data/mockResearch";
+import ResearchTree from "@/components/ResearchTree";
 import { Sparkles } from "lucide-react";
 
 const Index = () => {
@@ -18,7 +16,7 @@ const Index = () => {
     setTimeout(() => {
       setIsLoading(false);
       setHasSearched(true);
-    }, 1500);
+    }, 1200);
   }, []);
 
   const handleReset = useCallback(() => {
@@ -26,66 +24,40 @@ const Index = () => {
     setUserQuery("");
   }, []);
 
+  if (hasSearched) {
+    return <ResearchTree userQuery={userQuery} onReset={handleReset} />;
+  }
+
   return (
-    <main className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary rounded-xl">
-              <Sparkles className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="font-display text-lg font-semibold text-foreground">
-                Bio Research Explorer
-              </h1>
-              <p className="text-xs text-muted-foreground">
-                Discover similar research landscapes
-              </p>
-            </div>
+    <main className="min-h-screen bg-background flex flex-col items-center justify-center px-4">
+      {/* Minimal centered layout */}
+      <div className="w-full max-w-2xl text-center">
+        {/* Logo/Title */}
+        <div className="flex items-center justify-center gap-3 mb-12">
+          <div className="p-3 bg-primary rounded-2xl">
+            <Sparkles className="w-6 h-6 text-primary-foreground" />
           </div>
+          <h1 className="font-display text-2xl font-semibold text-foreground">
+            Bio Research Explorer
+          </h1>
         </div>
-      </header>
 
-      {/* Main content */}
-      <div className="container mx-auto px-4 py-8">
-        {!hasSearched ? (
-          <div className="max-w-4xl mx-auto">
-            {/* Hero section */}
-            <section className="text-center mb-12 pt-8">
-              <h2 className="font-display text-4xl md:text-5xl font-semibold text-foreground mb-4">
-                Map Your Research<br />
-                <span className="text-primary">Landscape</span>
-              </h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Enter your bio research idea and explore a visual map of related projects, 
-                papers, and approaches clustered by methodology
-              </p>
-            </section>
+        {/* Main heading */}
+        <h2 className="font-display text-4xl md:text-5xl font-semibold text-foreground mb-4 leading-tight">
+          Map Your Research Idea
+        </h2>
+        <p className="text-lg text-muted-foreground mb-12">
+          Discover related projects as a visual branch map
+        </p>
 
-            {/* Search input */}
-            <div className="mb-16">
-              <ResearchInput onSubmit={handleSearch} isLoading={isLoading} />
-            </div>
+        {/* Input */}
+        <ResearchInput onSubmit={handleSearch} isLoading={isLoading} />
 
-            {/* Empty state illustration */}
-            <EmptyState />
-          </div>
-        ) : (
-          <ResearchLandscape
-            clusters={clusters}
-            userQuery={userQuery}
-            onReset={handleReset}
-          />
-        )}
+        {/* Subtle hint */}
+        <p className="text-sm text-muted-foreground/60 mt-16">
+          Try: "CRISPR gene therapy for cancer" or "microbiome and mental health"
+        </p>
       </div>
-
-      {/* Footer */}
-      <footer className="border-t border-border mt-auto py-6">
-        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          Explore bio research similarity maps
-        </div>
-      </footer>
     </main>
   );
 };
