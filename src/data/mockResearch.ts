@@ -1,237 +1,257 @@
-import { ResearchProject, Cluster } from "@/types/research";
+import { ResearchProject, ResearchCluster, PatternInsight } from "@/types/research";
+
+export const clusters: ResearchCluster[] = [
+  { id: "genetic", label: "Genetic Modification", description: "Gene editing and genetic engineering approaches" },
+  { id: "enzyme", label: "Enzyme-Based Approaches", description: "Enzyme optimization and biocatalysis" },
+  { id: "computational", label: "Computational Modeling", description: "In-silico analysis and simulation" },
+  { id: "environmental", label: "Environmental Studies", description: "Field observation and ecological research" },
+];
 
 export const mockProjects: ResearchProject[] = [
   {
-    id: "1",
-    title: "CRISPR-Cas9 Gene Editing for Sickle Cell Disease",
-    summary: "Targeted gene correction in hematopoietic stem cells using CRISPR technology to treat genetic blood disorders.",
-    method: "Gene Editing",
-    cluster: 1,
-    clusterName: "Genetic Therapies",
-    similarity: 0.94,
+    id: "p1",
+    title: "CRISPR-Cas9 for Crop Resilience",
+    summary: "Gene editing to enhance drought tolerance in wheat varieties",
+    cluster: "genetic",
+    clusterLabel: "Genetic Modification",
+    similarity: 0.92,
     details: {
-      abstract: "This research explores the application of CRISPR-Cas9 gene editing technology to correct the genetic mutation responsible for sickle cell disease. By targeting and editing the HBB gene in patient-derived hematopoietic stem cells, we demonstrate the potential for a one-time curative treatment approach.",
-      keyFindings: [
-        "92% editing efficiency in stem cells",
-        "Stable gene correction maintained over 18 months",
-        "No off-target effects detected in clinical trials"
+      overview: "This research applied CRISPR-Cas9 gene editing to modify drought-response genes in wheat, achieving a 40% improvement in water-use efficiency under controlled conditions.",
+      whatWorked: [
+        "High editing efficiency (85%) in target genes",
+        "Stable inheritance across three generations",
+        "No detectable off-target effects"
       ],
-      year: 2024,
-      authors: ["Dr. Emily Chen", "Dr. Marcus Williams", "Dr. Sarah Johnson"],
-      keywords: ["CRISPR", "sickle cell", "gene therapy", "stem cells"]
-    }
-  },
-  {
-    id: "2",
-    title: "mRNA Vaccines for Cancer Immunotherapy",
-    summary: "Personalized mRNA-based cancer vaccines targeting patient-specific neoantigens for enhanced immune response.",
-    method: "mRNA Technology",
-    cluster: 1,
-    clusterName: "Genetic Therapies",
-    similarity: 0.87,
-    details: {
-      abstract: "Development of personalized cancer vaccines using mRNA technology to encode patient-specific tumor neoantigens. This approach stimulates a targeted immune response against cancer cells while minimizing damage to healthy tissue.",
-      keyFindings: [
-        "65% of patients showed tumor regression",
-        "Personalized vaccine production in under 4 weeks",
-        "Enhanced T-cell activation observed"
+      whatDidntWork: [
+        "Field trials showed lower improvement than lab results",
+        "Regulatory approval process took 3 years",
+        "Some edited lines showed reduced yield"
       ],
-      year: 2024,
-      authors: ["Dr. Lisa Park", "Dr. James Morrison"],
-      keywords: ["mRNA", "cancer", "immunotherapy", "neoantigens"]
-    }
-  },
-  {
-    id: "3",
-    title: "Neural Organoids for Drug Screening",
-    summary: "Brain organoids derived from patient iPSCs for personalized neurological drug testing and disease modeling.",
-    method: "Organoid Culture",
-    cluster: 2,
-    clusterName: "In Vitro Models",
-    similarity: 0.82,
-    details: {
-      abstract: "This study presents a high-throughput platform for generating patient-specific brain organoids from induced pluripotent stem cells. These 3D neural structures accurately recapitulate brain development and disease pathology, enabling personalized drug screening.",
-      keyFindings: [
-        "Organoids develop mature neural circuits within 6 months",
-        "Disease phenotypes accurately modeled in 85% of cases",
-        "Reduced drug development timeline by 40%"
+      keyLessons: [
+        "Start regulatory conversations early",
+        "Always validate with field trials before publishing",
+        "Consider polygenic approaches for complex traits"
       ],
+      relationToIdea: "Directly relevant if you're exploring genetic approaches to plant resilience. The methodology and regulatory insights would transfer well.",
+      externalLink: "https://example.com/crispr-crops",
       year: 2023,
-      authors: ["Dr. Nina Rodriguez", "Dr. Alex Turner"],
-      keywords: ["organoids", "iPSC", "neurology", "drug screening"]
+      authors: ["Dr. Sarah Chen", "Prof. Michael Torres"]
     }
   },
   {
-    id: "4",
-    title: "Microbiome Engineering for Metabolic Disorders",
-    summary: "Synthetic biology approaches to engineer gut bacteria for treatment of obesity and diabetes.",
-    method: "Synthetic Biology",
-    cluster: 3,
-    clusterName: "Microbiome",
-    similarity: 0.79,
+    id: "p2",
+    title: "mRNA Delivery in Plant Cells",
+    summary: "Novel lipid nanoparticle system for transient gene expression",
+    cluster: "genetic",
+    clusterLabel: "Genetic Modification",
+    similarity: 0.78,
     details: {
-      abstract: "Engineering of gut microbiome consortia using synthetic biology tools to produce therapeutic molecules. This approach targets metabolic pathways disrupted in obesity and type 2 diabetes, offering a novel treatment modality.",
-      keyFindings: [
-        "Engineered bacteria survive gut transit",
-        "Significant improvement in glucose tolerance",
-        "Long-term colonization achieved in animal models"
+      overview: "Developed a lipid nanoparticle delivery system adapted from mammalian research for transient expression in plant cells, bypassing GMO regulations.",
+      whatWorked: [
+        "Successful transient expression in 70% of treated cells",
+        "Non-integrating approach simplified regulatory pathway",
+        "Cost-effective at scale"
       ],
+      whatDidntWork: [
+        "Expression duration limited to 5-7 days",
+        "Required multiple applications for sustained effect",
+        "Some plant species showed resistance to uptake"
+      ],
+      keyLessons: [
+        "Transient approaches can be valuable for certain applications",
+        "Consider species-specific optimization early",
+        "Regulatory advantages may outweigh technical limitations"
+      ],
+      relationToIdea: "Useful if you want to avoid permanent genetic modification. The delivery technology could complement other approaches.",
       year: 2024,
-      authors: ["Dr. Michael Chang", "Dr. Rebecca Foster"],
-      keywords: ["microbiome", "synthetic biology", "metabolism", "diabetes"]
+      authors: ["Dr. Lisa Park", "Dr. James Wright"]
     }
   },
   {
-    id: "5",
-    title: "Gut-Brain Axis in Neurodegenerative Disease",
-    summary: "Investigating microbial metabolites and their influence on Alzheimer's disease progression.",
-    method: "Metabolomics",
-    cluster: 3,
-    clusterName: "Microbiome",
-    similarity: 0.75,
+    id: "p3",
+    title: "Cellulase Optimization via Directed Evolution",
+    summary: "Engineering more efficient enzymes for biofuel production",
+    cluster: "enzyme",
+    clusterLabel: "Enzyme-Based Approaches",
+    similarity: 0.85,
     details: {
-      abstract: "Comprehensive metabolomic analysis of gut-derived compounds and their effects on neuroinflammation and protein aggregation in Alzheimer's disease. This research reveals potential therapeutic targets in the gut-brain communication pathway.",
-      keyFindings: [
-        "Identified 12 key metabolites linked to disease progression",
-        "Dietary intervention showed cognitive improvements",
-        "Novel biomarkers discovered for early detection"
+      overview: "Used directed evolution over 12 rounds to improve cellulase activity 8-fold, significantly reducing costs for cellulosic biofuel production.",
+      whatWorked: [
+        "Systematic screening identified beneficial mutations",
+        "Combined mutations showed synergistic effects",
+        "Thermostability improved alongside activity"
       ],
+      whatDidntWork: [
+        "High-throughput screening was expensive initially",
+        "Some promising variants lost stability",
+        "Scale-up revealed unexpected substrate inhibition"
+      ],
+      keyLessons: [
+        "Screen for multiple properties simultaneously",
+        "Plan for scale-up challenges from the start",
+        "Document failed variants—they inform future work"
+      ],
+      relationToIdea: "Highly relevant for enzyme engineering projects. The screening methodology and lessons on scale-up are transferable.",
       year: 2023,
-      authors: ["Dr. Jennifer Liu", "Dr. Thomas Brown"],
-      keywords: ["gut-brain axis", "Alzheimer's", "metabolomics", "neurodegeneration"]
+      authors: ["Prof. Maria Rodriguez", "Dr. Kevin Liu"]
     }
   },
   {
-    id: "6",
-    title: "AI-Driven Protein Structure Prediction",
-    summary: "Deep learning models for accurate prediction of protein folding and drug-binding interactions.",
-    method: "Machine Learning",
-    cluster: 4,
-    clusterName: "Computational Biology",
+    id: "p4",
+    title: "Immobilized Enzyme Bioreactors",
+    summary: "Continuous flow systems for industrial enzyme applications",
+    cluster: "enzyme",
+    clusterLabel: "Enzyme-Based Approaches",
     similarity: 0.71,
     details: {
-      abstract: "Development of novel deep learning architectures inspired by AlphaFold for predicting protein structures and their interactions with small molecules. This computational approach accelerates drug discovery pipelines significantly.",
-      keyFindings: [
-        "Accuracy within 0.5 Å RMSD for most proteins",
-        "Reduced structure determination time from months to hours",
-        "Successfully predicted novel drug targets"
+      overview: "Designed and tested continuous flow bioreactors with immobilized enzymes, achieving 95% enzyme retention over 30 days of operation.",
+      whatWorked: [
+        "Novel immobilization chemistry retained activity",
+        "Continuous operation reduced labor costs",
+        "System remained stable for extended periods"
       ],
-      year: 2024,
-      authors: ["Dr. David Kim", "Dr. Anna Petrov"],
-      keywords: ["AI", "protein folding", "drug discovery", "deep learning"]
+      whatDidntWork: [
+        "Initial enzyme loading was inefficient",
+        "Substrate channeling caused hot spots",
+        "Cleaning protocols needed optimization"
+      ],
+      keyLessons: [
+        "Flow dynamics are as important as enzyme chemistry",
+        "Build in redundancy for industrial applications",
+        "Consider end-of-life enzyme recovery"
+      ],
+      relationToIdea: "Relevant if you're thinking about industrial applications. The engineering insights complement basic research.",
+      year: 2022,
+      authors: ["Dr. Anna Petrov", "Prof. Robert Kim"]
     }
   },
   {
-    id: "7",
-    title: "Single-Cell Multi-Omics in Cancer Evolution",
-    summary: "Integrated analysis of genome, transcriptome, and proteome at single-cell resolution to track tumor evolution.",
-    method: "Multi-Omics",
-    cluster: 4,
-    clusterName: "Computational Biology",
+    id: "p5",
+    title: "AlphaFold for Enzyme Design",
+    summary: "Using AI structure prediction to guide rational enzyme engineering",
+    cluster: "computational",
+    clusterLabel: "Computational Modeling",
+    similarity: 0.82,
+    details: {
+      overview: "Combined AlphaFold structure predictions with molecular dynamics to rationally design enzyme variants, reducing experimental screening by 80%.",
+      whatWorked: [
+        "Accurate prediction of mutation effects",
+        "Reduced time to candidate identification",
+        "Identified non-obvious binding site improvements"
+      ],
+      whatDidntWork: [
+        "Struggled with highly flexible regions",
+        "Some predictions didn't match experimental results",
+        "Computational resources were limiting"
+      ],
+      keyLessons: [
+        "Use computational predictions to guide, not replace, experiments",
+        "Validate predictions early with key variants",
+        "Build relationships with computational centers for resources"
+      ],
+      relationToIdea: "Essential if you're planning any rational design. The workflow and validation strategies are directly applicable.",
+      year: 2024,
+      authors: ["Dr. Jennifer Liu", "Dr. Thomas Brown"]
+    }
+  },
+  {
+    id: "p6",
+    title: "Metabolic Network Modeling",
+    summary: "Genome-scale models for predicting metabolic engineering outcomes",
+    cluster: "computational",
+    clusterLabel: "Computational Modeling",
     similarity: 0.68,
     details: {
-      abstract: "Novel single-cell multi-omics platform enabling simultaneous profiling of DNA, RNA, and proteins in individual cancer cells. This technology reveals the complex dynamics of tumor heterogeneity and treatment resistance.",
-      keyFindings: [
-        "Identified rare drug-resistant cell populations",
-        "Mapped tumor evolution during treatment",
-        "Discovered new biomarkers for treatment response"
+      overview: "Built and validated genome-scale metabolic models to predict the effects of gene knockouts and overexpression on product yields.",
+      whatWorked: [
+        "Predicted 75% of experimental outcomes correctly",
+        "Identified non-intuitive pathway bottlenecks",
+        "Reduced wet lab experimentation significantly"
       ],
-      year: 2024,
-      authors: ["Dr. Sarah Martinez", "Dr. Kevin White"],
-      keywords: ["single-cell", "multi-omics", "cancer", "tumor evolution"]
+      whatDidntWork: [
+        "Model curation was extremely time-consuming",
+        "Regulatory effects were poorly captured",
+        "Required extensive experimental validation"
+      ],
+      keyLessons: [
+        "Invest in model quality before making predictions",
+        "Combine with kinetic modeling for regulation",
+        "Share models openly for community validation"
+      ],
+      relationToIdea: "Valuable for metabolic engineering projects. The modeling workflow and validation approach are well-documented.",
+      year: 2023,
+      authors: ["Prof. David Martinez", "Dr. Emily White"]
     }
   },
   {
-    id: "8",
-    title: "Exosome-Mediated Drug Delivery",
-    summary: "Engineered extracellular vesicles for targeted delivery of therapeutic cargo across the blood-brain barrier.",
-    method: "Nanomedicine",
-    cluster: 5,
-    clusterName: "Drug Delivery",
+    id: "p7",
+    title: "Soil Microbiome Field Studies",
+    summary: "Long-term observation of microbial community dynamics in agriculture",
+    cluster: "environmental",
+    clusterLabel: "Environmental Studies",
     similarity: 0.65,
     details: {
-      abstract: "Engineering of exosomes derived from neural stem cells for targeted delivery of siRNA and small molecules to the brain. This platform overcomes blood-brain barrier limitations for treating neurological disorders.",
-      keyFindings: [
-        "10-fold increase in brain accumulation vs. free drug",
-        "Successful delivery to specific brain regions",
-        "Minimal immunogenicity observed"
+      overview: "Five-year longitudinal study tracking soil microbiome changes under different agricultural practices, identifying key species for soil health.",
+      whatWorked: [
+        "Identified reliable indicator species",
+        "Long-term data revealed seasonal patterns",
+        "Strong correlation with crop yields"
       ],
-      year: 2023,
-      authors: ["Dr. Robert Lee", "Dr. Michelle Wong"],
-      keywords: ["exosomes", "drug delivery", "blood-brain barrier", "nanomedicine"]
+      whatDidntWork: [
+        "Weather variability complicated analysis",
+        "Sample processing was a bottleneck",
+        "Some sites had unexpected confounding factors"
+      ],
+      keyLessons: [
+        "Plan for longer timescales than initially expected",
+        "Build in replication for environmental variability",
+        "Engage with farmers early for site access"
+      ],
+      relationToIdea: "Useful context if your work intersects with environmental applications. The observational methodology is rigorous.",
+      year: 2024,
+      authors: ["Prof. Rebecca Foster", "Dr. Michael Chang"]
     }
   },
   {
-    id: "9",
-    title: "Liver-on-a-Chip for Toxicity Testing",
-    summary: "Microfluidic organ chips recapitulating liver physiology for predictive drug toxicity assessment.",
-    method: "Organ-on-Chip",
-    cluster: 2,
-    clusterName: "In Vitro Models",
-    similarity: 0.62,
-    details: {
-      abstract: "Development of a vascularized liver-on-a-chip platform that accurately predicts drug-induced liver injury. The system incorporates multiple cell types and dynamic flow conditions to mimic in vivo physiology.",
-      keyFindings: [
-        "87% accuracy in predicting clinical hepatotoxicity",
-        "Maintained liver function for 28 days",
-        "Identified mechanisms of toxicity for failed drugs"
-      ],
-      year: 2023,
-      authors: ["Dr. Patricia Hayes", "Dr. George Miller"],
-      keywords: ["organ-on-chip", "liver", "toxicity", "microfluidics"]
-    }
-  },
-  {
-    id: "10",
-    title: "Lipid Nanoparticle Optimization for mRNA Delivery",
-    summary: "Novel ionizable lipid formulations for enhanced mRNA delivery efficiency and reduced immunogenicity.",
-    method: "Lipid Nanoparticles",
-    cluster: 5,
-    clusterName: "Drug Delivery",
+    id: "p8",
+    title: "Bioremediation Pilot Studies",
+    summary: "Field testing of engineered microbes for pollution cleanup",
+    cluster: "environmental",
+    clusterLabel: "Environmental Studies",
     similarity: 0.58,
     details: {
-      abstract: "Systematic optimization of lipid nanoparticle formulations for mRNA therapeutics. Novel ionizable lipids demonstrate improved endosomal escape and reduced inflammatory responses compared to current formulations.",
-      keyFindings: [
-        "5-fold improvement in delivery efficiency",
-        "Reduced inflammatory cytokine release by 70%",
-        "Stable formulation at room temperature for 6 months"
+      overview: "Conducted controlled field releases of engineered bacteria for heavy metal remediation, with comprehensive environmental monitoring.",
+      whatWorked: [
+        "Achieved 60% reduction in target pollutants",
+        "No spread beyond treatment zone",
+        "Community acceptance was high with engagement"
       ],
-      year: 2024,
-      authors: ["Dr. Amy Zhang", "Dr. Daniel Cooper"],
-      keywords: ["lipid nanoparticles", "mRNA delivery", "formulation", "therapeutics"]
+      whatDidntWork: [
+        "Regulatory approval took 4 years",
+        "Engineered strains had reduced fitness",
+        "Long-term persistence was limited"
+      ],
+      keyLessons: [
+        "Start regulatory engagement at project conception",
+        "Consider fitness alongside function in engineering",
+        "Community engagement is non-negotiable"
+      ],
+      relationToIdea: "Relevant if considering environmental applications. The regulatory and community engagement lessons are broadly applicable.",
+      year: 2023,
+      authors: ["Dr. Patricia Hayes", "Prof. George Miller"]
     }
   }
 ];
 
-export const clusters: Cluster[] = [
-  {
-    id: 1,
-    name: "Genetic Therapies",
-    description: "Gene editing and mRNA-based therapeutic approaches",
-    projects: mockProjects.filter(p => p.cluster === 1)
-  },
-  {
-    id: 2,
-    name: "In Vitro Models",
-    description: "Organoids and organ-on-chip systems for research",
-    projects: mockProjects.filter(p => p.cluster === 2)
-  },
-  {
-    id: 3,
-    name: "Microbiome",
-    description: "Gut microbiota and metabolic health research",
-    projects: mockProjects.filter(p => p.cluster === 3)
-  },
-  {
-    id: 4,
-    name: "Computational Biology",
-    description: "AI and data-driven biological research",
-    projects: mockProjects.filter(p => p.cluster === 4)
-  },
-  {
-    id: 5,
-    name: "Drug Delivery",
-    description: "Novel therapeutic delivery systems",
-    projects: mockProjects.filter(p => p.cluster === 5)
-  }
+export const patternInsights: PatternInsight[] = [
+  { pattern: "Regulatory timelines are consistently underestimated", frequency: "5 of 8 projects" },
+  { pattern: "Lab results often overperform field/industrial conditions", frequency: "6 of 8 projects" },
+  { pattern: "Computational pre-screening significantly reduces costs", frequency: "3 of 8 projects" },
+  { pattern: "Community/stakeholder engagement determines real-world success", frequency: "4 of 8 projects" },
+];
+
+export const redirectionSuggestions = [
+  "Consider combining computational modeling with your experimental approach to reduce iterations",
+  "Explore enzyme-based methods as a lower-regulatory-burden alternative to genetic modification",
+  "If targeting environmental applications, begin stakeholder engagement now"
 ];

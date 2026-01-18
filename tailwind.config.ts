@@ -15,7 +15,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
-        display: ['Playfair Display', 'serif'],
+        serif: ['Source Serif 4', 'Georgia', 'serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -51,6 +51,14 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        node: {
+          user: "hsl(var(--node-user))",
+          "user-border": "hsl(var(--node-user-border))",
+          cluster: "hsl(var(--node-cluster))",
+          "cluster-border": "hsl(var(--node-cluster-border))",
+          project: "hsl(var(--node-project))",
+          "project-border": "hsl(var(--node-project-border))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -61,31 +69,11 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        cluster: {
-          1: "hsl(var(--cluster-1))",
-          2: "hsl(var(--cluster-2))",
-          3: "hsl(var(--cluster-3))",
-          4: "hsl(var(--cluster-4))",
-          5: "hsl(var(--cluster-5))",
-        },
-        "cluster-border": {
-          1: "hsl(var(--cluster-1-border))",
-          2: "hsl(var(--cluster-2-border))",
-          3: "hsl(var(--cluster-3-border))",
-          4: "hsl(var(--cluster-4-border))",
-          5: "hsl(var(--cluster-5-border))",
-        },
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
-      },
-      boxShadow: {
-        'soft-sm': 'var(--shadow-sm)',
-        'soft-md': 'var(--shadow-md)',
-        'soft-lg': 'var(--shadow-lg)',
-        'soft-xl': 'var(--shadow-xl)',
       },
       keyframes: {
         "accordion-down": {
@@ -96,15 +84,10 @@ export default {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
-        "float": {
-          "0%, 100%": { transform: "translateY(0)" },
-          "50%": { transform: "translateY(-10px)" },
-        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "float": "float 6s ease-in-out infinite",
       },
     },
   },

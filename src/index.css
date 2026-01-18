@@ -2,63 +2,54 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
 
 @layer base {
   :root {
-    /* Warm, scientific palette */
-    --background: 40 30% 98%;
-    --foreground: 200 25% 15%;
+    /* Calm academic palette - ivory, slate, sage */
+    --background: 40 25% 97%;
+    --foreground: 220 15% 20%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 200 25% 15%;
+    --card: 40 20% 99%;
+    --card-foreground: 220 15% 20%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 200 25% 15%;
+    --popover: 40 20% 99%;
+    --popover-foreground: 220 15% 20%;
 
-    /* Deep teal - scientific, trustworthy */
-    --primary: 185 65% 35%;
-    --primary-foreground: 0 0% 100%;
+    /* Muted sage green - academic, calm */
+    --primary: 150 25% 35%;
+    --primary-foreground: 40 20% 98%;
 
-    /* Warm cream for secondary surfaces */
-    --secondary: 35 35% 94%;
-    --secondary-foreground: 200 25% 20%;
+    /* Warm ivory */
+    --secondary: 40 30% 94%;
+    --secondary-foreground: 220 15% 25%;
 
-    --muted: 40 20% 92%;
-    --muted-foreground: 200 15% 45%;
+    --muted: 40 15% 92%;
+    --muted-foreground: 220 10% 45%;
 
-    /* Coral accent for highlights */
-    --accent: 12 75% 62%;
-    --accent-foreground: 0 0% 100%;
+    /* Soft slate blue accent */
+    --accent: 215 30% 55%;
+    --accent-foreground: 40 20% 98%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 60% 50%;
+    --destructive-foreground: 40 20% 98%;
 
-    --border: 40 20% 88%;
-    --input: 40 20% 88%;
-    --ring: 185 65% 35%;
+    --border: 40 15% 88%;
+    --input: 40 15% 88%;
+    --ring: 150 25% 35%;
 
     --radius: 0.75rem;
 
-    /* Cluster colors - soft, distinct pastels */
-    --cluster-1: 185 50% 92%;
-    --cluster-2: 150 45% 90%;
-    --cluster-3: 25 55% 92%;
-    --cluster-4: 280 35% 92%;
-    --cluster-5: 45 50% 92%;
+    /* Node colors - muted, natural */
+    --node-user: 150 30% 92%;
+    --node-user-border: 150 35% 45%;
+    --node-cluster: 215 25% 94%;
+    --node-cluster-border: 215 30% 55%;
+    --node-project: 40 25% 96%;
+    --node-project-border: 40 20% 75%;
 
-    /* Cluster border colors */
-    --cluster-1-border: 185 55% 45%;
-    --cluster-2-border: 150 50% 40%;
-    --cluster-3-border: 25 60% 55%;
-    --cluster-4-border: 280 40% 55%;
-    --cluster-5-border: 45 55% 50%;
-
-    /* Custom shadows */
-    --shadow-sm: 0 1px 3px 0 hsl(200 25% 15% / 0.04), 0 1px 2px -1px hsl(200 25% 15% / 0.04);
-    --shadow-md: 0 4px 6px -1px hsl(200 25% 15% / 0.06), 0 2px 4px -2px hsl(200 25% 15% / 0.06);
-    --shadow-lg: 0 10px 15px -3px hsl(200 25% 15% / 0.08), 0 4px 6px -4px hsl(200 25% 15% / 0.08);
-    --shadow-xl: 0 20px 25px -5px hsl(200 25% 15% / 0.1), 0 8px 10px -6px hsl(200 25% 15% / 0.1);
+    /* Connection line */
+    --edge-color: 220 15% 75%;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -71,45 +62,42 @@
   }
 
   .dark {
-    --background: 200 25% 8%;
-    --foreground: 40 20% 95%;
+    --background: 220 15% 10%;
+    --foreground: 40 15% 90%;
 
-    --card: 200 20% 12%;
-    --card-foreground: 40 20% 95%;
+    --card: 220 15% 13%;
+    --card-foreground: 40 15% 90%;
 
-    --popover: 200 20% 12%;
-    --popover-foreground: 40 20% 95%;
+    --popover: 220 15% 13%;
+    --popover-foreground: 40 15% 90%;
 
-    --primary: 185 60% 50%;
-    --primary-foreground: 200 25% 8%;
+    --primary: 150 30% 50%;
+    --primary-foreground: 220 15% 10%;
 
-    --secondary: 200 20% 18%;
-    --secondary-foreground: 40 20% 90%;
+    --secondary: 220 15% 18%;
+    --secondary-foreground: 40 15% 85%;
 
-    --muted: 200 20% 18%;
-    --muted-foreground: 40 15% 60%;
+    --muted: 220 15% 18%;
+    --muted-foreground: 40 10% 55%;
 
-    --accent: 12 70% 55%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 215 35% 60%;
+    --accent-foreground: 220 15% 10%;
 
-    --destructive: 0 62% 50%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 55% 45%;
+    --destructive-foreground: 40 15% 95%;
 
-    --border: 200 20% 22%;
-    --input: 200 20% 22%;
-    --ring: 185 60% 50%;
+    --border: 220 15% 22%;
+    --input: 220 15% 22%;
+    --ring: 150 30% 50%;
 
-    --cluster-1: 185 40% 18%;
-    --cluster-2: 150 35% 16%;
-    --cluster-3: 25 45% 18%;
-    --cluster-4: 280 30% 18%;
-    --cluster-5: 45 40% 18%;
+    --node-user: 150 25% 18%;
+    --node-user-border: 150 35% 50%;
+    --node-cluster: 215 20% 18%;
+    --node-cluster-border: 215 35% 55%;
+    --node-project: 40 15% 16%;
+    --node-project-border: 40 15% 40%;
 
-    --cluster-1-border: 185 50% 50%;
-    --cluster-2-border: 150 45% 45%;
-    --cluster-3-border: 25 55% 55%;
-    --cluster-4-border: 280 35% 55%;
-    --cluster-5-border: 45 50% 50%;
+    --edge-color: 220 10% 35%;
 
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
@@ -129,116 +117,100 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Inter', system-ui, sans-serif;
   }
 
-  h1, h2, h3 {
-    font-family: 'Playfair Display', serif;
+  h1, h2, h3, h4 {
+    font-family: 'Source Serif 4', Georgia, serif;
   }
 }
 
 @layer components {
-  .research-card {
-    @apply bg-card rounded-xl p-5 transition-all duration-300 ease-out cursor-pointer;
-    box-shadow: var(--shadow-md);
+  .research-input {
+    @apply w-full bg-card border border-border rounded-xl px-5 py-4 text-base transition-all duration-300 resize-none;
+    box-shadow: 0 2px 8px -2px hsl(220 15% 20% / 0.04);
   }
 
-  .research-card:hover {
-    box-shadow: var(--shadow-xl);
-    transform: translateY(-4px);
-  }
-
-  .cluster-container {
-    @apply rounded-2xl p-6 transition-all duration-300;
-  }
-
-  .method-tag {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-colors;
-  }
-
-  .input-research {
-    @apply w-full bg-card border-2 border-border rounded-2xl px-5 py-5 text-lg transition-all duration-200;
-    box-shadow: var(--shadow-sm);
-  }
-
-  .input-research:focus {
+  .research-input:focus {
     @apply border-primary outline-none;
-    box-shadow: var(--shadow-md), 0 0 0 3px hsl(var(--primary) / 0.1);
+    box-shadow: 0 4px 16px -4px hsl(150 25% 35% / 0.15);
   }
 
-  .btn-explore {
-    @apply inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold px-8 py-4 rounded-xl transition-all duration-200;
-    box-shadow: var(--shadow-md);
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground font-medium px-6 py-3 rounded-xl transition-all duration-300;
+    box-shadow: 0 2px 8px -2px hsl(150 25% 35% / 0.3);
   }
 
-  .btn-explore:hover {
-    box-shadow: var(--shadow-lg);
-    transform: translateY(-2px);
+  .btn-primary:hover {
+    box-shadow: 0 4px 16px -4px hsl(150 25% 35% / 0.4);
+    transform: translateY(-1px);
   }
 
-  .btn-explore:active {
-    transform: translateY(0);
+  .btn-primary:disabled {
+    @apply opacity-50 cursor-not-allowed;
+    transform: none;
   }
 
-  .similarity-line {
-    stroke: hsl(var(--primary) / 0.2);
-    stroke-width: 2;
-    fill: none;
+  .node-card {
+    @apply bg-card rounded-xl border transition-all duration-300 cursor-grab active:cursor-grabbing;
+    box-shadow: 0 2px 12px -4px hsl(220 15% 20% / 0.08);
+  }
+
+  .node-card:hover {
+    box-shadow: 0 8px 24px -8px hsl(220 15% 20% / 0.12);
+  }
+
+  .detail-panel {
+    @apply bg-card border-l border-border h-full overflow-y-auto;
+    box-shadow: -4px 0 24px -8px hsl(220 15% 20% / 0.08);
+  }
+
+  .insight-panel {
+    @apply bg-secondary/50 backdrop-blur-sm border border-border rounded-xl;
   }
 
   .fade-in {
     animation: fadeIn 0.4s ease-out forwards;
   }
 
-  .slide-up {
-    animation: slideUp 0.5s ease-out forwards;
-  }
-
-  .scale-in {
-    animation: scaleIn 0.3s ease-out forwards;
+  .slide-in-right {
+    animation: slideInRight 0.3s ease-out forwards;
   }
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+@keyframes pulse-gentle {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
 }
 
-@keyframes pulse-soft {
-  0%, 100% {
-    opacity: 0.4;
-  }
-  50% {
-    opacity: 0.8;
-  }
+.animate-pulse-gentle {
+  animation: pulse-gentle 2s ease-in-out infinite;
 }
 
-.animate-pulse-soft {
-  animation: pulse-soft 2s ease-in-out infinite;
+/* React Flow custom styles */
+.react-flow__node {
+  cursor: grab !important;
+}
+
+.react-flow__node:active {
+  cursor: grabbing !important;
+}
+
+.react-flow__edge-path {
+  stroke: hsl(var(--edge-color)) !important;
+  stroke-width: 2px;
+}
+
+.react-flow__background {
+  background-color: hsl(var(--background)) !important;
 }
