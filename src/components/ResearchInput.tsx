@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Sparkles } from "lucide-react";
+import { Search, ArrowRight } from "lucide-react";
 
 interface ResearchInputProps {
   onSubmit: (query: string) => void;
@@ -17,36 +17,30 @@ const ResearchInput = ({ onSubmit, isLoading }: ResearchInputProps) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-3xl mx-auto">
+    <form onSubmit={handleSubmit} className="w-full">
       <div className="relative">
         <div className="absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground">
           <Search className="w-5 h-5" />
         </div>
-        <textarea
+        <input
+          type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Describe your bio research idea..."
-          className="input-research pl-14 pr-36 min-h-[120px] resize-none"
-          rows={3}
+          placeholder="Describe your research idea..."
+          className="input-research pl-14 pr-16"
         />
         <button
           type="submit"
           disabled={!query.trim() || isLoading}
-          className="btn-explore absolute right-4 bottom-4 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+          className="absolute right-3 top-1/2 -translate-y-1/2 p-3 bg-primary text-primary-foreground rounded-xl transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-primary/90"
         >
           {isLoading ? (
             <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
           ) : (
-            <>
-              <Sparkles className="w-4 h-4" />
-              Explore
-            </>
+            <ArrowRight className="w-5 h-5" />
           )}
         </button>
       </div>
-      <p className="text-sm text-muted-foreground mt-3 text-center">
-        Enter a research concept to discover related projects and papers
-      </p>
     </form>
   );
 };

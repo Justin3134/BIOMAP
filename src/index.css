@@ -157,7 +157,7 @@
   }
 
   .input-research {
-    @apply w-full bg-card border-2 border-border rounded-xl px-5 py-4 text-base transition-all duration-200;
+    @apply w-full bg-card border-2 border-border rounded-2xl px-5 py-5 text-lg transition-all duration-200;
     box-shadow: var(--shadow-sm);
   }
 
