@@ -15,6 +15,12 @@ export const mockProjects: ResearchProject[] = [
     cluster: "genetic",
     clusterLabel: "Genetic Modification",
     similarity: 0.92,
+    similarityReasons: [
+      "Both target plant resilience traits",
+      "Gene editing methodology alignment",
+      "Drought/stress response focus",
+      "Agricultural application context"
+    ],
     details: {
       overview: "This research applied CRISPR-Cas9 gene editing to modify drought-response genes in wheat, achieving a 40% improvement in water-use efficiency under controlled conditions.",
       whatWorked: [
@@ -35,7 +41,11 @@ export const mockProjects: ResearchProject[] = [
       relationToIdea: "Directly relevant if you're exploring genetic approaches to plant resilience. The methodology and regulatory insights would transfer well.",
       externalLink: "https://example.com/crispr-crops",
       year: 2023,
-      authors: ["Dr. Sarah Chen", "Prof. Michael Torres"]
+      authors: ["Dr. Sarah Chen", "Prof. Michael Torres"],
+      approach: "CRISPR-Cas9 gene editing",
+      difficulty: "High",
+      cost: "High",
+      timeframe: "3-5 years"
     }
   },
   {
@@ -45,6 +55,11 @@ export const mockProjects: ResearchProject[] = [
     cluster: "genetic",
     clusterLabel: "Genetic Modification",
     similarity: 0.78,
+    similarityReasons: [
+      "Non-permanent genetic modification",
+      "Plant cell targeting",
+      "Novel delivery mechanisms"
+    ],
     details: {
       overview: "Developed a lipid nanoparticle delivery system adapted from mammalian research for transient expression in plant cells, bypassing GMO regulations.",
       whatWorked: [
@@ -64,7 +79,11 @@ export const mockProjects: ResearchProject[] = [
       ],
       relationToIdea: "Useful if you want to avoid permanent genetic modification. The delivery technology could complement other approaches.",
       year: 2024,
-      authors: ["Dr. Lisa Park", "Dr. James Wright"]
+      authors: ["Dr. Lisa Park", "Dr. James Wright"],
+      approach: "Lipid nanoparticle delivery",
+      difficulty: "Medium",
+      cost: "Medium",
+      timeframe: "1-2 years"
     }
   },
   {
@@ -74,6 +93,11 @@ export const mockProjects: ResearchProject[] = [
     cluster: "enzyme",
     clusterLabel: "Enzyme-Based Approaches",
     similarity: 0.85,
+    similarityReasons: [
+      "Enzyme engineering methodology",
+      "Directed evolution techniques",
+      "Industrial bio-application"
+    ],
     details: {
       overview: "Used directed evolution over 12 rounds to improve cellulase activity 8-fold, significantly reducing costs for cellulosic biofuel production.",
       whatWorked: [
@@ -93,7 +117,11 @@ export const mockProjects: ResearchProject[] = [
       ],
       relationToIdea: "Highly relevant for enzyme engineering projects. The screening methodology and lessons on scale-up are transferable.",
       year: 2023,
-      authors: ["Prof. Maria Rodriguez", "Dr. Kevin Liu"]
+      authors: ["Prof. Maria Rodriguez", "Dr. Kevin Liu"],
+      approach: "Directed evolution",
+      difficulty: "Medium",
+      cost: "Medium",
+      timeframe: "2-3 years"
     }
   },
   {
@@ -103,6 +131,11 @@ export const mockProjects: ResearchProject[] = [
     cluster: "enzyme",
     clusterLabel: "Enzyme-Based Approaches",
     similarity: 0.71,
+    similarityReasons: [
+      "Industrial enzyme application",
+      "Bioreactor design principles",
+      "Continuous processing focus"
+    ],
     details: {
       overview: "Designed and tested continuous flow bioreactors with immobilized enzymes, achieving 95% enzyme retention over 30 days of operation.",
       whatWorked: [
@@ -122,7 +155,11 @@ export const mockProjects: ResearchProject[] = [
       ],
       relationToIdea: "Relevant if you're thinking about industrial applications. The engineering insights complement basic research.",
       year: 2022,
-      authors: ["Dr. Anna Petrov", "Prof. Robert Kim"]
+      authors: ["Dr. Anna Petrov", "Prof. Robert Kim"],
+      approach: "Immobilized enzyme systems",
+      difficulty: "Medium",
+      cost: "High",
+      timeframe: "1-2 years"
     }
   },
   {
@@ -132,6 +169,11 @@ export const mockProjects: ResearchProject[] = [
     cluster: "computational",
     clusterLabel: "Computational Modeling",
     similarity: 0.82,
+    similarityReasons: [
+      "AI-guided protein design",
+      "Structure prediction methods",
+      "Rational engineering approach"
+    ],
     details: {
       overview: "Combined AlphaFold structure predictions with molecular dynamics to rationally design enzyme variants, reducing experimental screening by 80%.",
       whatWorked: [
@@ -151,7 +193,11 @@ export const mockProjects: ResearchProject[] = [
       ],
       relationToIdea: "Essential if you're planning any rational design. The workflow and validation strategies are directly applicable.",
       year: 2024,
-      authors: ["Dr. Jennifer Liu", "Dr. Thomas Brown"]
+      authors: ["Dr. Jennifer Liu", "Dr. Thomas Brown"],
+      approach: "AI-guided rational design",
+      difficulty: "High",
+      cost: "Low",
+      timeframe: "6-12 months"
     }
   },
   {
@@ -161,6 +207,11 @@ export const mockProjects: ResearchProject[] = [
     cluster: "computational",
     clusterLabel: "Computational Modeling",
     similarity: 0.68,
+    similarityReasons: [
+      "Systems biology approach",
+      "Predictive modeling",
+      "Metabolic pathway focus"
+    ],
     details: {
       overview: "Built and validated genome-scale metabolic models to predict the effects of gene knockouts and overexpression on product yields.",
       whatWorked: [
@@ -180,7 +231,11 @@ export const mockProjects: ResearchProject[] = [
       ],
       relationToIdea: "Valuable for metabolic engineering projects. The modeling workflow and validation approach are well-documented.",
       year: 2023,
-      authors: ["Prof. David Martinez", "Dr. Emily White"]
+      authors: ["Prof. David Martinez", "Dr. Emily White"],
+      approach: "Genome-scale metabolic modeling",
+      difficulty: "High",
+      cost: "Low",
+      timeframe: "1-2 years"
     }
   },
   {
@@ -190,6 +245,11 @@ export const mockProjects: ResearchProject[] = [
     cluster: "environmental",
     clusterLabel: "Environmental Studies",
     similarity: 0.65,
+    similarityReasons: [
+      "Environmental observation methods",
+      "Microbial community analysis",
+      "Agricultural application"
+    ],
     details: {
       overview: "Five-year longitudinal study tracking soil microbiome changes under different agricultural practices, identifying key species for soil health.",
       whatWorked: [
@@ -209,7 +269,11 @@ export const mockProjects: ResearchProject[] = [
       ],
       relationToIdea: "Useful context if your work intersects with environmental applications. The observational methodology is rigorous.",
       year: 2024,
-      authors: ["Prof. Rebecca Foster", "Dr. Michael Chang"]
+      authors: ["Prof. Rebecca Foster", "Dr. Michael Chang"],
+      approach: "Longitudinal field observation",
+      difficulty: "Medium",
+      cost: "Medium",
+      timeframe: "3-5 years"
     }
   },
   {
@@ -219,6 +283,11 @@ export const mockProjects: ResearchProject[] = [
     cluster: "environmental",
     clusterLabel: "Environmental Studies",
     similarity: 0.58,
+    similarityReasons: [
+      "Environmental biotechnology",
+      "Engineered organism deployment",
+      "Field validation approach"
+    ],
     details: {
       overview: "Conducted controlled field releases of engineered bacteria for heavy metal remediation, with comprehensive environmental monitoring.",
       whatWorked: [
@@ -238,7 +307,11 @@ export const mockProjects: ResearchProject[] = [
       ],
       relationToIdea: "Relevant if considering environmental applications. The regulatory and community engagement lessons are broadly applicable.",
       year: 2023,
-      authors: ["Dr. Patricia Hayes", "Prof. George Miller"]
+      authors: ["Dr. Patricia Hayes", "Prof. George Miller"],
+      approach: "Engineered microbe field trials",
+      difficulty: "High",
+      cost: "High",
+      timeframe: "4-6 years"
     }
   }
 ];
