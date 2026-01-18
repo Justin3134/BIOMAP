@@ -22,15 +22,14 @@ import NoveltyRadar from "./NoveltyRadar";
 import FeasibilityPanel from "./FeasibilityPanel";
 import { mockProjects, clusters } from "@/data/mockResearch";
 import { ResearchProject } from "@/types/research";
-import { ProjectIntake, DecisionLogEntry } from "@/types/workspace";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ProjectIntake } from "@/types/workspace";
+import { ArrowLeft } from "lucide-react";
 
 interface ResearchLandscapeProps {
   userQuery: string;
   onReset: () => void;
   intake?: ProjectIntake;
   onPinEvidence?: (project: ResearchProject) => void;
-  onAddDecision?: (entry: Omit<DecisionLogEntry, "id" | "date">) => void;
   pinnedEvidenceIds?: string[];
   hideChatSidebar?: boolean;
 }
@@ -41,7 +40,7 @@ const nodeTypes = {
   projectNode: ProjectNode,
 };
 
-const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, onAddDecision, pinnedEvidenceIds = [], hideChatSidebar }: ResearchLandscapeProps) => {
+const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEvidenceIds = [], hideChatSidebar }: ResearchLandscapeProps) => {
   const [selectedProject, setSelectedProject] = useState<ResearchProject | null>(null);
   const [pinnedProjects, setPinnedProjects] = useState<ResearchProject[]>([]);
   const [chatContext, setChatContext] = useState<ResearchProject[]>([]);
@@ -289,7 +288,6 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, onAddDec
           isInContext={chatContext.some(p => p.id === selectedProject.id)}
           onPinEvidence={onPinEvidence}
           isPinnedEvidence={pinnedEvidenceIds.includes(selectedProject.id)}
-          onAddDecision={onAddDecision}
         />
       )}
 
