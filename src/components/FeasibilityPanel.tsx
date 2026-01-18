@@ -60,7 +60,9 @@ const FeasibilityPanel = ({ clusters, projects }: FeasibilityPanelProps) => {
     // Get all requirements for this cluster's approaches
     const allRequirements = new Set<string>();
     clusterProjects.forEach(project => {
-      const reqs = APPROACH_REQUIREMENTS[project.details.approach] || [];
+      // Use cluster label as the approach since we don't have project.details.approach anymore
+      const approach = cluster.label;
+      const reqs = APPROACH_REQUIREMENTS[approach] || [];
       reqs.forEach(r => allRequirements.add(r));
     });
 
