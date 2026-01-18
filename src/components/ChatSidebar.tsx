@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { ResearchProject } from "@/types/research";
-import { Send, X, Sparkles, MessageSquare } from "lucide-react";
+import { Send, X, Sparkles, MessageSquare, PanelRightClose, PanelRightOpen } from "lucide-react";
 
 interface ChatMessage {
   id: string;
@@ -28,6 +28,7 @@ const ChatSidebar = ({ contextProjects, onRemoveContext, onAskAboutText }: ChatS
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -39,7 +40,6 @@ const ChatSidebar = ({ contextProjects, onRemoveContext, onAskAboutText }: ChatS
   }, [messages]);
 
   const generateMockResponse = (userMessage: string): ChatMessage => {
-    // Mock AI response based on context
     const projectTitles = contextProjects.map(p => p.title);
     
     const responses: Record<string, string> = {
@@ -87,7 +87,6 @@ const ChatSidebar = ({ contextProjects, onRemoveContext, onAskAboutText }: ChatS
     setInput("");
     setIsTyping(true);
 
-    // Simulate AI thinking
     await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
 
     const aiResponse = generateMockResponse(messageToSend);
@@ -102,13 +101,45 @@ const ChatSidebar = ({ contextProjects, onRemoveContext, onAskAboutText }: ChatS
     }
   };
 
+  // Collapsed state - just show a button to expand
+  if (isCollapsed) {
+    return (
+      <div className="h-full flex flex-col items-center py-4 px-2 bg-card border-l border-border">
+        <button
+          onClick={() => setIsCollapsed(false)}
+          className="p-2.5 rounded-lg bg-secondary hover:bg-secondary/80 text-foreground transition-colors"
+          title="Open Research Assistant"
+        >
+          <PanelRightOpen className="w-5 h-5" />
+        </button>
+        <div className="mt-3 flex flex-col items-center gap-1">
+          <MessageSquare className="w-4 h-4 text-muted-foreground" />
+          {contextProjects.length > 0 && (
+            <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center">
+              {contextProjects.length}
+            </span>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="w-[360px] h-full flex flex-col bg-card border-l border-border">
+    <div className="w-[360px] h-full flex flex-col bg-card border-l border-border transition-all duration-300">
       {/* Header */}
       <div className="p-4 border-b border-border">
-        <div className="flex items-center gap-2 mb-3">
-          <MessageSquare className="w-5 h-5 text-primary" />
-          <h2 className="font-serif font-semibold text-foreground">Research Assistant</h2>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <MessageSquare className="w-5 h-5 text-primary" />
+            <h2 className="font-serif font-semibold text-foreground">Research Assistant</h2>
+          </div>
+          <button
+            onClick={() => setIsCollapsed(true)}
+            className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+            title="Collapse sidebar"
+          >
+            <PanelRightClose className="w-4 h-4" />
+          </button>
         </div>
         
         {/* Context Indicator */}
