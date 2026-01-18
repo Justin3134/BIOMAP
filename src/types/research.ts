@@ -2,22 +2,28 @@ export interface ResearchProject {
   id: string;
   title: string;
   summary: string;
-  method: string;
-  cluster: number;
-  clusterName: string;
+  cluster: string;
+  clusterLabel: string;
   similarity: number;
   details: {
-    abstract: string;
-    keyFindings: string[];
+    overview: string;
+    whatWorked: string[];
+    whatDidntWork: string[];
+    keyLessons: string[];
+    relationToIdea: string;
+    externalLink?: string;
     year: number;
     authors: string[];
-    keywords: string[];
   };
 }
 
-export interface Cluster {
-  id: number;
-  name: string;
+export interface ResearchCluster {
+  id: string;
+  label: string;
   description: string;
-  projects: ResearchProject[];
+}
+
+export interface PatternInsight {
+  pattern: string;
+  frequency: string;
 }
