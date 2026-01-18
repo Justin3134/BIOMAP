@@ -3,21 +3,17 @@ import {
   LayoutDashboard, 
   Map, 
   Pin, 
-  FileText, 
-  Target, 
-  CalendarDays,
+  FileText,
   ChevronLeft,
   ChevronRight
 } from "lucide-react";
 import { useState } from "react";
 
 const NAV_ITEMS = [
-  { path: "/workspace", label: "Overview", icon: LayoutDashboard },
+  { path: "/workspace/overview", label: "Overview", icon: LayoutDashboard },
   { path: "/workspace/map", label: "Research Map", icon: Map },
   { path: "/workspace/evidence", label: "Pinned Evidence", icon: Pin },
   { path: "/workspace/notes", label: "Notes", icon: FileText },
-  { path: "/workspace/decisions", label: "Decision Log", icon: Target },
-  { path: "/workspace/weekly", label: "Weekly Log", icon: CalendarDays },
 ];
 
 interface WorkspaceSidebarProps {
@@ -56,12 +52,10 @@ const WorkspaceSidebar = ({ projectGoal }: WorkspaceSidebarProps) => {
         </button>
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 p-2 space-y-1">
         {NAV_ITEMS.map(item => {
           const isActive = location.pathname === item.path || 
             (item.path === "/workspace/map" && location.pathname === "/workspace");
-          
           return (
             <NavLink
               key={item.path}

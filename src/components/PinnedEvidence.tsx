@@ -96,12 +96,12 @@ const PinnedEvidence = ({ evidence, onRemove, onUpdateTags }: PinnedEvidenceProp
             </p>
           </div>
         ) : (
-          <div className="grid gap-4">
+          <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
             {filteredEvidence.map(item => {
               const project = mockProjects.find(p => p.id === item.projectId);
               
               return (
-                <div key={item.id} className="bg-card border border-border rounded-xl p-4">
+                <div key={item.id} className="bg-card border border-border rounded-xl p-5">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                       <h4 className="font-medium text-foreground">{item.projectTitle}</h4>

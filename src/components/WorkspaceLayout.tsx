@@ -3,11 +3,10 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import WorkspaceSidebar from "./WorkspaceSidebar";
 import ResearchLandscape from "./ResearchLandscape";
 import PinnedEvidence from "./PinnedEvidence";
-import DecisionLog from "./DecisionLog";
 import ChatSidebar from "./ChatSidebar";
 import { ProjectIntake, WorkspaceState, DecisionLogEntry, PinnedEvidence as PinnedEvidenceType } from "@/types/workspace";
 import { ResearchProject } from "@/types/research";
-import { FileText, CalendarDays, LayoutDashboard } from "lucide-react";
+import { FileText } from "lucide-react";
 
 interface WorkspaceLayoutProps {
   intake: ProjectIntake;
@@ -88,25 +87,6 @@ const WorkspaceLayout = ({ intake, onReset }: WorkspaceLayoutProps) => {
         placeholder="Start typing your notes..."
         className="flex-1 w-full bg-card border border-border rounded-xl p-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
       />
-    </div>
-  );
-
-  // Weekly Log page component
-  const WeeklyLogPage = () => (
-    <div className="h-full flex flex-col p-6">
-      <h1 className="font-serif text-2xl font-semibold text-foreground mb-2">Weekly Log</h1>
-      <p className="text-sm text-muted-foreground mb-4">
-        Track your weekly progress and reflections
-      </p>
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-center">
-          <CalendarDays className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-          <h3 className="font-medium text-foreground mb-2">Coming soon</h3>
-          <p className="text-sm text-muted-foreground">
-            Weekly check-ins will help you track progress over time.
-          </p>
-        </div>
-      </div>
     </div>
   );
 
@@ -220,14 +200,7 @@ const WorkspaceLayout = ({ intake, onReset }: WorkspaceLayoutProps) => {
                 onUpdateTags={handleUpdateEvidenceTags}
               />
             } />
-            <Route path="/decisions" element={
-              <DecisionLog
-                entries={workspaceState.decisionLog}
-                onAddEntry={handleAddDecision}
-              />
-            } />
             <Route path="/notes" element={<NotesPage />} />
-            <Route path="/weekly" element={<WeeklyLogPage />} />
             <Route path="/overview" element={<OverviewPage />} />
           </Routes>
         </div>

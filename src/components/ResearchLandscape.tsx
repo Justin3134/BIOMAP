@@ -45,6 +45,7 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, onAddDec
   const [selectedProject, setSelectedProject] = useState<ResearchProject | null>(null);
   const [pinnedProjects, setPinnedProjects] = useState<ResearchProject[]>([]);
   const [chatContext, setChatContext] = useState<ResearchProject[]>([]);
+  const [isLocked, setIsLocked] = useState(false);
 
   const handleSelectProject = useCallback((project: ResearchProject) => {
     setSelectedProject(project);
@@ -237,19 +238,26 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, onAddDec
         <ReactFlow
           nodes={nodes}
           edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
+          onNodesChange={isLocked ? undefined : onNodesChange}
+          onEdgesChange={isLocked ? undefined : onEdgesChange}
           nodeTypes={nodeTypes}
           fitView
           fitViewOptions={{ padding: 0.3 }}
           minZoom={0.3}
           maxZoom={1.5}
           defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
+          panOnDrag={!isLocked}
+          zoomOnScroll={!isLocked}
+          zoomOnPinch={!isLocked}
+          zoomOnDoubleClick={!isLocked}
+          nodesDraggable={!isLocked}
         >
           <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="hsl(220 15% 85%)" />
           <Controls 
             position="bottom-right"
             className="!bg-card !border-border !shadow-sm"
+            showInteractive={true}
+            onInteractiveChange={(interactive) => setIsLocked(!interactive)}
           />
         </ReactFlow>
 
@@ -285,13 +293,7 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, onAddDec
         />
       )}
 
-      {/* Chat Sidebar - conditionally visible */}
-      {!hideChatSidebar && (
-        <ChatSidebar
-          contextProjects={chatContext}
-          onRemoveContext={handleRemoveFromContext}
-        />
-      )}
+      {/* Chat Sidebar removed - using WorkspaceLayout's ChatSidebar only */}
     </div>
   );
 };
