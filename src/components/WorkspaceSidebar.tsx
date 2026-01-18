@@ -10,10 +10,10 @@ import {
 import { useState } from "react";
 
 const NAV_ITEMS = [
-  { path: "/workspace/overview", label: "Overview", icon: LayoutDashboard },
-  { path: "/workspace/map", label: "Research Map", icon: Map },
-  { path: "/workspace/evidence", label: "Pinned Evidence", icon: Pin },
-  { path: "/workspace/notes", label: "Notes", icon: FileText },
+  { path: "overview", label: "Overview", icon: LayoutDashboard },
+  { path: "map", label: "Research Map", icon: Map },
+  { path: "evidence", label: "Pinned Evidence", icon: Pin },
+  { path: "notes", label: "Notes", icon: FileText },
 ];
 
 interface WorkspaceSidebarProps {
@@ -54,8 +54,8 @@ const WorkspaceSidebar = ({ projectTitle }: WorkspaceSidebarProps) => {
 
       <nav className="flex-1 p-2 space-y-1">
         {NAV_ITEMS.map(item => {
-          const isActive = location.pathname === item.path || 
-            (item.path === "/workspace/map" && location.pathname === "/workspace");
+          const isActive = location.pathname.endsWith(item.path) || 
+            (item.path === "map" && (location.pathname === "/" || location.pathname === "/workspace"));
           return (
             <NavLink
               key={item.path}
