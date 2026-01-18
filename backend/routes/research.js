@@ -11,10 +11,7 @@ import {
 import {
     kmeansClustering
 } from '../services/clustering.js';
-import {
-    generateResearchPapers,
-    clusterByApproach
-} from '../services/openaiResearch.js';
+import { searchPapers } from '../services/semanticScholar.js';
 
 const router = express.Router();
 
