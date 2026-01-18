@@ -1,14 +1,12 @@
 import { memo, useState } from "react";
 import { Handle, Position } from "@xyflow/react";
 import { ResearchProject } from "@/types/research";
-import { Pin, HelpCircle, X } from "lucide-react";
+import { HelpCircle, X } from "lucide-react";
 
 interface ProjectNodeData {
   project: ResearchProject;
   onSelect: (project: ResearchProject) => void;
-  onPin: (project: ResearchProject) => void;
   isSelected: boolean;
-  isPinned: boolean;
 }
 
 interface ProjectNodeProps {
@@ -16,7 +14,7 @@ interface ProjectNodeProps {
 }
 
 const ProjectNode = memo(({ data }: ProjectNodeProps) => {
-  const { project, onSelect, onPin, isSelected, isPinned } = data;
+  const { project, onSelect, isSelected } = data;
   const [showWhySimilar, setShowWhySimilar] = useState(false);
   const similarityPercent = Math.round(project.similarity * 100);
   
@@ -28,25 +26,6 @@ const ProjectNode = memo(({ data }: ProjectNodeProps) => {
         className="!w-2 !h-2 !bg-node-project-border !border-2 !border-card"
       />
       
-      {/* Pin button - top left */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onPin(project);
-        }}
-        className={`
-          absolute -top-3 -left-3 w-8 h-8 rounded-full flex items-center justify-center
-          transition-all duration-200 z-10 shadow-md
-          ${isPinned 
-            ? 'bg-primary text-primary-foreground' 
-            : 'bg-card border-2 border-border text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-primary hover:text-primary-foreground hover:border-primary'
-          }
-        `}
-        title={isPinned ? "Unpin from comparison" : "Pin to compare"}
-      >
-        <Pin className="w-4 h-4" />
-      </button>
-
       {/* Similarity badge - top right */}
       <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center text-xs font-semibold text-primary shadow-sm z-10">
         {similarityPercent}
@@ -59,9 +38,7 @@ const ProjectNode = memo(({ data }: ProjectNodeProps) => {
           transition-all duration-200
           ${isSelected 
             ? 'border-primary border-2 ring-4 ring-primary/10' 
-            : isPinned
-              ? 'border-primary/50 border-2 ring-2 ring-primary/5'
-              : 'border-node-project-border hover:border-primary/50'
+            : 'border-node-project-border hover:border-primary/50'
           }
         `}
       >

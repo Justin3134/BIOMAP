@@ -16,8 +16,6 @@ import ClusterNode from "./nodes/ClusterNode";
 import ProjectNode from "./nodes/ProjectNode";
 import DetailPanel from "./DetailPanel";
 import InsightPanel from "./InsightPanel";
-import ComparePanel from "./ComparePanel";
-import ChatSidebar from "./ChatSidebar";
 import NoveltyRadar from "./NoveltyRadar";
 import FeasibilityPanel from "./FeasibilityPanel";
 import { mockProjects, clusters } from "@/data/mockResearch";
@@ -44,32 +42,10 @@ const nodeTypes = {
 
 const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEvidenceIds = [], hideChatSidebar, chatContext = [], onAddToContext }: ResearchLandscapeProps) => {
   const [selectedProject, setSelectedProject] = useState<ResearchProject | null>(null);
-  const [pinnedProjects, setPinnedProjects] = useState<ResearchProject[]>([]);
   const [isLocked, setIsLocked] = useState(false);
 
   const handleSelectProject = useCallback((project: ResearchProject) => {
     setSelectedProject(project);
-  }, []);
-
-  const handlePinProject = useCallback((project: ResearchProject) => {
-    setPinnedProjects(prev => {
-      const isAlreadyPinned = prev.some(p => p.id === project.id);
-      if (isAlreadyPinned) {
-        return prev.filter(p => p.id !== project.id);
-      }
-      if (prev.length >= 3) {
-        return [...prev.slice(1), project];
-      }
-      return [...prev, project];
-    });
-  }, []);
-
-  const handleRemovePin = useCallback((projectId: string) => {
-    setPinnedProjects(prev => prev.filter(p => p.id !== projectId));
-  }, []);
-
-  const handleClearPins = useCallback(() => {
-    setPinnedProjects([]);
   }, []);
 
   const handleAskAboutText = useCallback((text: string, project: ResearchProject) => {
@@ -142,9 +118,7 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
           data: { 
             project, 
             onSelect: handleSelectProject,
-            onPin: handlePinProject,
             isSelected: selectedProject?.id === project.id,
-            isPinned: pinnedProjects.some(p => p.id === project.id)
           },
           draggable: true,
         });
@@ -159,7 +133,7 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
     });
 
     return { initialNodes: nodes, initialEdges: edges };
-  }, [userQuery, selectedProject, pinnedProjects, handleSelectProject, handlePinProject]);
+  }, [userQuery, selectedProject, handleSelectProject]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
@@ -175,16 +149,14 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
             data: {
               ...node.data,
               isSelected: selectedProject?.id === nodeData.project?.id,
-              isPinned: pinnedProjects.some(p => p.id === nodeData.project?.id),
               onSelect: handleSelectProject,
-              onPin: handlePinProject,
             }
           };
         }
         return node;
       })
     );
-  }, [selectedProject, pinnedProjects, setNodes, handleSelectProject, handlePinProject]);
+  }, [selectedProject, setNodes, handleSelectProject]);
 
   return (
     <div className="h-screen flex bg-background">
@@ -237,21 +209,11 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
         </ReactFlow>
 
         {/* Left panels stack - scrollable container */}
-        <div 
-          className="absolute bottom-6 left-6 z-10 flex flex-col gap-2 max-h-[calc(100vh-120px)] overflow-y-auto scrollbar-thin" 
-          style={{ marginBottom: pinnedProjects.length > 0 ? '200px' : '0' }}
-        >
+        <div className="absolute bottom-6 left-6 z-10 flex flex-col gap-2 max-h-[calc(100vh-120px)] overflow-y-auto scrollbar-thin">
           <NoveltyRadar clusters={clusters} projects={mockProjects} />
           <FeasibilityPanel clusters={clusters} projects={mockProjects} />
           <InsightPanel />
         </div>
-
-        {/* Compare Panel - bottom */}
-        <ComparePanel 
-          projects={pinnedProjects}
-          onRemove={handleRemovePin}
-          onClear={handleClearPins}
-        />
       </div>
 
       {/* Detail panel - slides in from right when project selected */}
