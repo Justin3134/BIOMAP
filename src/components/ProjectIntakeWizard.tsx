@@ -59,7 +59,7 @@ const ProjectIntakeWizard = ({ onComplete }: ProjectIntakeWizardProps) => {
 
   const canProceed = () => {
     switch (step) {
-      case 1: return intake.goal.trim().length > 10;
+      case 1: return intake.goal.trim().length > 0;
       case 2: return intake.capabilities.length > 0;
       case 3: return true;
       case 4: return intake.intents.length > 0;
