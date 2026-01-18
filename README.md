@@ -1,22 +1,31 @@
-# Welcome to your Lovable project
+# BioMap - AI-Powered Bio Research Workspace
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+An intelligent research workspace for bio labs that maps research landscapes, extracts evidence from papers, and provides context-aware AI assistance grounded in real scientific literature.
+
+## How to run this project
+
+See **[QUICK_START.md](QUICK_START.md)** for detailed instructions.
+
+**Quick version:**
+
+Terminal 1 (Backend):
+```bash
+cd backend
+npm run dev
+```
+
+Terminal 2 (Frontend):
+```bash
+npm run dev
+```
 
 ## How can I edit this code?
 
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
 **Use your preferred IDE**
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+Clone this repo and push changes.
 
 The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
@@ -52,22 +61,30 @@ npm run dev
 
 ## What technologies are used for this project?
 
-This project is built with:
-
+**Frontend:**
 - Vite
 - TypeScript
 - React
 - shadcn-ui
 - Tailwind CSS
 
-## How can I deploy this project?
+**Backend:**
+- Node.js + Express
+- OpenAI API (GPT-4 + Embeddings)
+- Semantic Scholar API
+- K-means clustering
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+## Key Features
 
-## Can I connect a custom domain to my Lovable project?
+1. **Project Brain** - AI-generated context summaries
+2. **Research Map** - Semantic clustering of real papers
+3. **Evidence Cards** - Structured insights extraction
+4. **Smart Notes** - AI-powered refinement
+5. **Context-Aware Chat** - Grounded AI with citations
 
-Yes, you can!
+## Documentation
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- [Quick Start Guide](QUICK_START.md)
+- [Implementation Summary](IMPLEMENTATION_SUMMARY.md)
+- [How to Run](HOW_TO_RUN.md)
+- [Backend README](backend/README.md)
