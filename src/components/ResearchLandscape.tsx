@@ -93,11 +93,26 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
               authors: paper.authors || "Unknown",
               similarity: paper.similarity,
               novelty: paper.similarity > 0.8 ? "high" : paper.similarity > 0.6 ? "medium" : "low",
-              feasibility: "medium", // Could be enhanced with more logic
+              feasibility: "medium",
               cluster: cluster.branch_id,
+              clusterLabel: cluster.label,
               tags: [],
-              abstract: paper.abstract,
-              citations: paper.citationCount || 0,
+              summary: paper.abstract?.substring(0, 200) + '...' || paper.title,
+              similarityReasons: [`${Math.round(paper.similarity * 100)}% semantic similarity to your research goal`],
+              details: {
+                overview: paper.abstract || 'No abstract available',
+                whatWorked: [],
+                whatDidntWork: [],
+                keyLessons: [],
+                relationToIdea: `This paper explores ${cluster.label.toLowerCase()} which relates to your research goal.`,
+                externalLink: paper.url || `https://www.semanticscholar.org/paper/${paper.paperId}`,
+                year: paper.year,
+                authors: paper.authors ? paper.authors.split(', ') : [],
+                approach: cluster.label,
+                difficulty: paper.similarity > 0.7 ? "Medium" : "High",
+                cost: "Medium",
+                timeframe: "6-12 months"
+              }
             });
           });
         });
