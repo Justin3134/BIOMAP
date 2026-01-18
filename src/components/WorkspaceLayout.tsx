@@ -339,7 +339,7 @@ const WorkspaceLayout = ({ intake, onReset, onUpdateIntake }: WorkspaceLayoutPro
       <div className="flex-1 flex">
         <div className="flex-1 overflow-hidden">
           <Routes>
-            <Route path="/" element={<Navigate to="map" replace />} />
+            <Route index element={<Navigate to="map" replace />} />
             <Route path="map" element={
               <ResearchLandscape 
                 userQuery={intake.goal} 
