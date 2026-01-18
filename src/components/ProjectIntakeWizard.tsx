@@ -25,6 +25,7 @@ const INTENTS = [
 const ProjectIntakeWizard = ({ onComplete }: ProjectIntakeWizardProps) => {
   const [step, setStep] = useState(1);
   const [intake, setIntake] = useState<ProjectIntake>({
+    title: "",
     goal: "",
     successCriteria: "",
     capabilities: [],
@@ -61,7 +62,7 @@ const ProjectIntakeWizard = ({ onComplete }: ProjectIntakeWizardProps) => {
 
   const canProceed = () => {
     switch (step) {
-      case 1: return intake.goal.trim().length > 0;
+      case 1: return intake.title.trim().length > 0 && intake.goal.trim().length > 0;
       case 2: return intake.capabilities.length > 0;
       case 3: return true;
       case 4: return intake.intents.length > 0;
@@ -100,19 +101,35 @@ const ProjectIntakeWizard = ({ onComplete }: ProjectIntakeWizardProps) => {
             <div className="space-y-6 fade-in">
               <div className="text-center mb-8">
                 <h2 className="font-serif text-2xl font-semibold text-foreground mb-2">
-                  What's your research goal?
+                  What's your research about?
                 </h2>
                 <p className="text-muted-foreground">
-                  Describe your project in plain language. We'll map similar research.
+                  Give your project a name and describe your goal.
                 </p>
               </div>
 
               <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Research Title
+                </label>
+                <input
+                  type="text"
+                  value={intake.title}
+                  onChange={(e) => updateIntake({ title: e.target.value })}
+                  placeholder="e.g., Drought-Resistant Crop Development"
+                  className="w-full bg-secondary border-0 rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Research Goal
+                </label>
                 <textarea
                   value={intake.goal}
                   onChange={(e) => updateIntake({ goal: e.target.value })}
                   placeholder="e.g., Developing drought-resistant crops using gene editing techniques..."
-                  className="w-full h-32 bg-secondary border-0 rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+                  className="w-full h-28 bg-secondary border-0 rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
                 />
               </div>
 

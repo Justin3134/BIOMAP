@@ -107,7 +107,7 @@ const FeasibilityPanel = ({ clusters, projects }: FeasibilityPanelProps) => {
       </button>
 
       {isExpanded && (
-        <div className="p-3 pt-0 space-y-3">
+        <div className="p-3 pt-0 space-y-3 max-h-[300px] overflow-y-auto">
           {/* Constraints Selection */}
           <div className="space-y-2">
             <span className="text-xs font-medium text-muted-foreground">What you have:</span>

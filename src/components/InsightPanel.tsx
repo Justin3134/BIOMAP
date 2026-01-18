@@ -24,7 +24,7 @@ const InsightPanel = () => {
 
       {/* Collapsible content */}
       {isExpanded && (
-        <div className="px-4 pb-4 fade-in">
+        <div className="px-4 pb-4 fade-in max-h-[250px] overflow-y-auto">
           {/* Patterns */}
           <div className="mb-5">
             <div className="flex items-center gap-2 mb-3">
