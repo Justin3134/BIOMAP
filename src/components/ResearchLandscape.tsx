@@ -32,6 +32,8 @@ interface ResearchLandscapeProps {
   onPinEvidence?: (project: ResearchProject) => void;
   pinnedEvidenceIds?: string[];
   hideChatSidebar?: boolean;
+  chatContext?: ResearchProject[];
+  onAddToContext?: (project: ResearchProject) => void;
 }
 
 const nodeTypes = {
@@ -40,10 +42,9 @@ const nodeTypes = {
   projectNode: ProjectNode,
 };
 
-const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEvidenceIds = [], hideChatSidebar }: ResearchLandscapeProps) => {
+const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEvidenceIds = [], hideChatSidebar, chatContext = [], onAddToContext }: ResearchLandscapeProps) => {
   const [selectedProject, setSelectedProject] = useState<ResearchProject | null>(null);
   const [pinnedProjects, setPinnedProjects] = useState<ResearchProject[]>([]);
-  const [chatContext, setChatContext] = useState<ResearchProject[]>([]);
   const [isLocked, setIsLocked] = useState(false);
 
   const handleSelectProject = useCallback((project: ResearchProject) => {
@@ -71,38 +72,13 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
     setPinnedProjects([]);
   }, []);
 
-  // Chat context handlers
-  const handleAddToContext = useCallback((project: ResearchProject) => {
-    setChatContext(prev => {
-      const isAlreadyInContext = prev.some(p => p.id === project.id);
-      if (isAlreadyInContext) {
-        return prev.filter(p => p.id !== project.id);
-      }
-      if (prev.length >= 3) {
-        return [...prev.slice(1), project];
-      }
-      return [...prev, project];
-    });
-  }, []);
-
-  const handleRemoveFromContext = useCallback((projectId: string) => {
-    setChatContext(prev => prev.filter(p => p.id !== projectId));
-  }, []);
-
   const handleAskAboutText = useCallback((text: string, project: ResearchProject) => {
     // Add project to context if not already there
-    setChatContext(prev => {
-      if (!prev.some(p => p.id === project.id)) {
-        if (prev.length >= 3) {
-          return [...prev.slice(1), project];
-        }
-        return [...prev, project];
-      }
-      return prev;
-    });
-    // The chat will handle the highlighted text through its own state
+    if (onAddToContext && !chatContext.some(p => p.id === project.id)) {
+      onAddToContext(project);
+    }
     console.log("Ask about:", text, "from project:", project.title);
-  }, []);
+  }, [onAddToContext, chatContext]);
 
   // Build nodes and edges
   const { initialNodes, initialEdges } = useMemo(() => {
@@ -283,7 +259,7 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
         <DetailPanel
           project={selectedProject}
           onClose={() => setSelectedProject(null)}
-          onAddToContext={handleAddToContext}
+          onAddToContext={onAddToContext}
           onAskAboutText={handleAskAboutText}
           isInContext={chatContext.some(p => p.id === selectedProject.id)}
           onPinEvidence={onPinEvidence}
