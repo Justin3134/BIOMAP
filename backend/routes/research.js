@@ -1,0 +1,156 @@
+import express from 'express';
+import { projectsDB, researchDB } from '../storage/db.js';
+import { searchPapers, extractKeyTerms } from '../services/semanticScholar.js';
+import { generateEmbedding, labelCluster, extractEvidence } from '../services/openai.js';
+import { kmeansClustering } from '../services/clustering.js';
+
+const router = express.Router();
+
+/**
+ * POST /api/research/map/:projectId
+ * Step 2: Build Research Landscape
+ * This is the CORE feature
+ */
+router.post('/map/:projectId', async (req, res) => {
+  try {
+    const project = projectsDB.get(req.params.projectId);
+    
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    console.log('🔍 Step A: Searching papers...');
+    // Step A: Find real research using Semantic Scholar
+    const searchQuery = project.summary + ' ' + extractKeyTerms(project.description);
+    const papers = await searchPapers(searchQuery, 20);
+
+    if (papers.length === 0) {
+      return res.json({
+        success: true,
+        message: 'No papers found',
+        clusters: []
+      });
+    }
+
+    console.log(`📄 Found ${papers.length} papers`);
+
+    // Step B: Make them comparable (embeddings)
+    console.log('🧮 Step B: Generating embeddings...');
+    const projectEmbedding = await generateEmbedding(project.summary);
+    
+    // Generate embeddings for each paper (use abstract or title)
+    const papersWithEmbeddings = await Promise.all(
+      papers.map(async (paper) => {
+        const text = paper.abstract || paper.title || '';
+        const embedding = await generateEmbedding(text.substring(0, 1000)); // Limit length
+        return {
+          ...paper,
+          embedding
+        };
+      })
+    );
+
+    console.log('🎯 Step C: Clustering papers...');
+    // Step C: Cluster papers into branches (3-5 clusters)
+    const numClusters = Math.min(4, Math.max(3, Math.ceil(papers.length / 5)));
+    const clusters = kmeansClustering(papersWithEmbeddings, projectEmbedding, numClusters);
+
+    console.log('🏷️ Step D: Labeling branches...');
+    // Step D: Label each branch
+    const labeledClusters = await Promise.all(
+      clusters.map(async (cluster) => {
+        const abstracts = cluster.papers
+          .slice(0, 3) // Use top 3 for labeling
+          .map(p => p.abstract || p.title)
+          .filter(Boolean);
+
+        const label = await labelCluster(abstracts);
+
+        return {
+          branch_id: cluster.cluster_id,
+          label,
+          papers: cluster.papers.map(p => ({
+            paperId: p.paperId,
+            title: p.title,
+            year: p.year,
+            authors: p.authors?.slice(0, 3).map(a => a.name).join(', '),
+            abstract: p.abstract,
+            citationCount: p.citationCount,
+            similarity: p.similarity,
+            venue: p.venue
+          })),
+          avgSimilarity: cluster.avgSimilarity
+        };
+      })
+    );
+
+    // Store research map
+    const researchMapId = `research_${req.params.projectId}`;
+    researchDB.set(researchMapId, {
+      projectId: req.params.projectId,
+      clusters: labeledClusters,
+      totalPapers: papers.length,
+      createdAt: new Date().toISOString()
+    });
+
+    console.log('✅ Research map built successfully!');
+
+    res.json({
+      success: true,
+      clusters: labeledClusters,
+      totalPapers: papers.length
+    });
+
+  } catch (error) {
+    console.error('Error building research map:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * GET /api/research/map/:projectId
+ * Get stored research map
+ */
+router.get('/map/:projectId', (req, res) => {
+  const researchMapId = `research_${req.params.projectId}`;
+  const researchMap = researchDB.get(researchMapId);
+
+  if (!researchMap) {
+    return res.status(404).json({ error: 'Research map not found. Build it first.' });
+  }
+
+  res.json(researchMap);
+});
+
+/**
+ * POST /api/research/evidence
+ * Step 3: Generate Evidence Card when user clicks a node
+ */
+router.post('/evidence', async (req, res) => {
+  try {
+    const { paperId, title, abstract } = req.body;
+
+    if (!abstract) {
+      return res.status(400).json({ error: 'Abstract is required' });
+    }
+
+    console.log('📋 Extracting evidence from paper...');
+    
+    // Extract structured evidence using OpenAI
+    const evidence = await extractEvidence(abstract, title);
+
+    res.json({
+      success: true,
+      paperId,
+      title,
+      evidence
+    });
+
+  } catch (error) {
+    console.error('Error extracting evidence:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+export default router;
+
