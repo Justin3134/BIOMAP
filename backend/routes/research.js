@@ -25,10 +25,23 @@ router.post('/map/:projectId', async (req, res) => {
     const papers = await searchPapers(searchQuery, 20);
 
     if (papers.length === 0) {
+      console.log('⚠️ No papers found, saving empty research map');
+      
+      // Store empty research map so we don't get 404
+      const researchMapId = `research_${req.params.projectId}`;
+      researchDB.set(researchMapId, {
+        projectId: req.params.projectId,
+        clusters: [],
+        totalPapers: 0,
+        createdAt: new Date().toISOString(),
+        error: 'No papers found. The search query may be too specific or Semantic Scholar may be rate limiting.'
+      });
+      
       return res.json({
         success: true,
-        message: 'No papers found',
-        clusters: []
+        message: 'No papers found. Try a broader search query.',
+        clusters: [],
+        totalPapers: 0
       });
     }
 
@@ -103,6 +116,17 @@ router.post('/map/:projectId', async (req, res) => {
 
   } catch (error) {
     console.error('Error building research map:', error);
+    
+    // Save error state to avoid 404
+    const researchMapId = `research_${req.params.projectId}`;
+    researchDB.set(researchMapId, {
+      projectId: req.params.projectId,
+      clusters: [],
+      totalPapers: 0,
+      createdAt: new Date().toISOString(),
+      error: error.message
+    });
+    
     res.status(500).json({ error: error.message });
   }
 });

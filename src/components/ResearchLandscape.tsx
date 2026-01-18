@@ -66,6 +66,16 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
         
         const map = await researchAPI.getMap(intake.projectId);
         
+        // Check if we have any papers
+        if (!map.clusters || map.clusters.length === 0) {
+          console.warn("Research map is empty, using mock data as fallback");
+          setError("No papers found. Using example data. Try a different research topic or wait a moment for API rate limits to reset.");
+          setResearchClusters(clusters);
+          setResearchProjects(mockProjects);
+          setIsLoading(false);
+          return;
+        }
+        
         // Transform backend data to frontend format
         const transformedClusters = map.clusters.map((cluster: any) => ({
           id: cluster.branch_id,
@@ -99,7 +109,7 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
         console.log(`Loaded ${transformedProjects.length} papers in ${transformedClusters.length} clusters`);
       } catch (err) {
         console.error("Failed to load research map:", err);
-        setError(err instanceof Error ? err.message : "Failed to load research map");
+        setError("API temporarily unavailable. Using example data. Try again in a moment.");
         // Fallback to mock data
         setResearchClusters(clusters);
         setResearchProjects(mockProjects);
