@@ -5,6 +5,7 @@ export interface ResearchProject {
   cluster: string;
   clusterLabel: string;
   similarity: number;
+  similarityReasons: string[]; // Why this is similar to user's idea
   details: {
     overview: string;
     whatWorked: string[];
@@ -14,6 +15,10 @@ export interface ResearchProject {
     externalLink?: string;
     year: number;
     authors: string[];
+    approach: string;
+    difficulty: "Low" | "Medium" | "High";
+    cost: "Low" | "Medium" | "High";
+    timeframe: string;
   };
 }
 

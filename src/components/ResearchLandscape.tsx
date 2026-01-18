@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import {
   ReactFlow,
   Node,
@@ -16,6 +16,7 @@ import ClusterNode from "./nodes/ClusterNode";
 import ProjectNode from "./nodes/ProjectNode";
 import DetailPanel from "./DetailPanel";
 import InsightPanel from "./InsightPanel";
+import ComparePanel from "./ComparePanel";
 import { mockProjects, clusters } from "@/data/mockResearch";
 import { ResearchProject } from "@/types/research";
 import { ArrowLeft } from "lucide-react";
@@ -33,9 +34,31 @@ const nodeTypes = {
 
 const ResearchLandscape = ({ userQuery, onReset }: ResearchLandscapeProps) => {
   const [selectedProject, setSelectedProject] = useState<ResearchProject | null>(null);
+  const [pinnedProjects, setPinnedProjects] = useState<ResearchProject[]>([]);
 
   const handleSelectProject = useCallback((project: ResearchProject) => {
     setSelectedProject(project);
+  }, []);
+
+  const handlePinProject = useCallback((project: ResearchProject) => {
+    setPinnedProjects(prev => {
+      const isAlreadyPinned = prev.some(p => p.id === project.id);
+      if (isAlreadyPinned) {
+        return prev.filter(p => p.id !== project.id);
+      }
+      if (prev.length >= 3) {
+        return [...prev.slice(1), project]; // Remove oldest, add new
+      }
+      return [...prev, project];
+    });
+  }, []);
+
+  const handleRemovePin = useCallback((projectId: string) => {
+    setPinnedProjects(prev => prev.filter(p => p.id !== projectId));
+  }, []);
+
+  const handleClearPins = useCallback(() => {
+    setPinnedProjects([]);
   }, []);
 
   // Build nodes and edges
@@ -100,7 +123,9 @@ const ResearchLandscape = ({ userQuery, onReset }: ResearchLandscapeProps) => {
           data: { 
             project, 
             onSelect: handleSelectProject,
-            isSelected: selectedProject?.id === project.id
+            onPin: handlePinProject,
+            isSelected: selectedProject?.id === project.id,
+            isPinned: pinnedProjects.some(p => p.id === project.id)
           },
           draggable: true,
         });
@@ -115,13 +140,13 @@ const ResearchLandscape = ({ userQuery, onReset }: ResearchLandscapeProps) => {
     });
 
     return { initialNodes: nodes, initialEdges: edges };
-  }, [userQuery, selectedProject, handleSelectProject]);
+  }, [userQuery, selectedProject, pinnedProjects, handleSelectProject, handlePinProject]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
-  // Update nodes when selection changes
-  useMemo(() => {
+  // Update nodes when selection or pins change
+  useEffect(() => {
     setNodes(nds => 
       nds.map(node => {
         if (node.type === 'projectNode') {
@@ -131,14 +156,16 @@ const ResearchLandscape = ({ userQuery, onReset }: ResearchLandscapeProps) => {
             data: {
               ...node.data,
               isSelected: selectedProject?.id === nodeData.project?.id,
+              isPinned: pinnedProjects.some(p => p.id === nodeData.project?.id),
               onSelect: handleSelectProject,
+              onPin: handlePinProject,
             }
           };
         }
         return node;
       })
     );
-  }, [selectedProject, setNodes, handleSelectProject]);
+  }, [selectedProject, pinnedProjects, setNodes, handleSelectProject, handlePinProject]);
 
   return (
     <div className="h-screen flex bg-background">
@@ -159,7 +186,7 @@ const ResearchLandscape = ({ userQuery, onReset }: ResearchLandscapeProps) => {
             Research Landscape
           </h1>
           <p className="text-sm text-muted-foreground">
-            Drag nodes to explore · Click to see details
+            Drag nodes to explore · Click to see details · Pin to compare
           </p>
         </div>
 
@@ -184,9 +211,16 @@ const ResearchLandscape = ({ userQuery, onReset }: ResearchLandscapeProps) => {
         </ReactFlow>
 
         {/* Insight panel - bottom left */}
-        <div className="absolute bottom-6 left-6 z-10">
+        <div className="absolute bottom-6 left-6 z-10" style={{ marginBottom: pinnedProjects.length > 0 ? '180px' : '0' }}>
           <InsightPanel />
         </div>
+
+        {/* Compare Panel - bottom */}
+        <ComparePanel 
+          projects={pinnedProjects}
+          onRemove={handleRemovePin}
+          onClear={handleClearPins}
+        />
       </div>
 
       {/* Detail panel - right side */}
