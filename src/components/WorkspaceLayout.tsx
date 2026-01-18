@@ -339,8 +339,8 @@ const WorkspaceLayout = ({ intake, onReset, onUpdateIntake }: WorkspaceLayoutPro
       <div className="flex-1 flex">
         <div className="flex-1 overflow-hidden">
           <Routes>
-            <Route path="/" element={<Navigate to="/workspace/map" replace />} />
-            <Route path="/map" element={
+            <Route path="/" element={<Navigate to="map" replace />} />
+            <Route path="map" element={
               <ResearchLandscape 
                 userQuery={intake.goal} 
                 onReset={onReset}
@@ -351,15 +351,15 @@ const WorkspaceLayout = ({ intake, onReset, onUpdateIntake }: WorkspaceLayoutPro
                 onAddToContext={handleAddToContext}
               />
             } />
-            <Route path="/evidence" element={
+            <Route path="evidence" element={
               <PinnedEvidence
                 evidence={workspaceState.pinnedEvidence}
                 onRemove={handleRemoveEvidence}
                 onUpdateTags={handleUpdateEvidenceTags}
               />
             } />
-            <Route path="/notes" element={<NotesPage />} />
-            <Route path="/overview" element={<OverviewPage />} />
+            <Route path="notes" element={<NotesPage />} />
+            <Route path="overview" element={<OverviewPage />} />
           </Routes>
         </div>
 
