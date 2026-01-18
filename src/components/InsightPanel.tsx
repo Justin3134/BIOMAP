@@ -3,7 +3,7 @@ import { patternInsights, redirectionSuggestions } from "@/data/mockResearch";
 import { TrendingUp, Compass, ChevronDown, ChevronUp } from "lucide-react";
 
 const InsightPanel = () => {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   return (
     <div className="insight-panel overflow-hidden transition-all duration-300">

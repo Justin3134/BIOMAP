@@ -247,8 +247,11 @@ const ResearchLandscape = ({ userQuery, onReset }: ResearchLandscapeProps) => {
           />
         </ReactFlow>
 
-        {/* Left panels stack */}
-        <div className="absolute bottom-6 left-6 z-10 flex flex-col gap-3" style={{ marginBottom: pinnedProjects.length > 0 ? '200px' : '0' }}>
+        {/* Left panels stack - scrollable container */}
+        <div 
+          className="absolute bottom-6 left-6 z-10 flex flex-col gap-2 max-h-[calc(100vh-120px)] overflow-y-auto scrollbar-thin" 
+          style={{ marginBottom: pinnedProjects.length > 0 ? '200px' : '0' }}
+        >
           <NoveltyRadar clusters={clusters} projects={mockProjects} />
           <FeasibilityPanel clusters={clusters} projects={mockProjects} />
           <InsightPanel />

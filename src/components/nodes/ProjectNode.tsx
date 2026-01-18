@@ -35,16 +35,16 @@ const ProjectNode = memo(({ data }: ProjectNodeProps) => {
           onPin(project);
         }}
         className={`
-          absolute -top-2 -left-2 w-7 h-7 rounded-full flex items-center justify-center
-          transition-all duration-200 z-10
+          absolute -top-3 -left-3 w-8 h-8 rounded-full flex items-center justify-center
+          transition-all duration-200 z-10 shadow-md
           ${isPinned 
-            ? 'bg-primary text-primary-foreground shadow-md' 
-            : 'bg-card border border-border text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-primary hover:text-primary-foreground'
+            ? 'bg-primary text-primary-foreground' 
+            : 'bg-card border-2 border-border text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-primary hover:text-primary-foreground hover:border-primary'
           }
         `}
         title={isPinned ? "Unpin from comparison" : "Pin to compare"}
       >
-        <Pin className="w-3.5 h-3.5" />
+        <Pin className="w-4 h-4" />
       </button>
 
       {/* Similarity badge - top right */}
