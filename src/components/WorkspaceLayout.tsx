@@ -149,7 +149,7 @@ const WorkspaceLayout = ({ intake, onReset }: WorkspaceLayoutProps) => {
       </div>
 
       {/* Constraints Summary */}
-      <div className="bg-card border border-border rounded-xl p-5">
+      <div className="bg-card border border-border rounded-xl p-5 mb-4">
         <h3 className="font-medium text-foreground mb-3">Your Constraints</h3>
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div>
@@ -173,7 +173,23 @@ const WorkspaceLayout = ({ intake, onReset }: WorkspaceLayoutProps) => {
             <span className="text-foreground ml-2 capitalize">{intake.preference.replace("_", " ")}</span>
           </div>
         </div>
+        {intake.customConstraints && (
+          <div className="mt-3 pt-3 border-t border-border">
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              Additional Constraints
+            </span>
+            <p className="text-sm text-foreground mt-1">{intake.customConstraints}</p>
+          </div>
+        )}
       </div>
+
+      {/* Capabilities Summary */}
+      {intake.customCapabilities && (
+        <div className="bg-card border border-border rounded-xl p-5">
+          <h3 className="font-medium text-foreground mb-2">Additional Resources</h3>
+          <p className="text-sm text-muted-foreground">{intake.customCapabilities}</p>
+        </div>
+      )}
     </div>
   );
 

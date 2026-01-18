@@ -5,12 +5,14 @@ export interface ProjectIntake {
   
   // Step 2: Capabilities
   capabilities: string[];
+  customCapabilities: string;
   
   // Step 3: Constraints
   budget: "under_10k" | "10k_50k" | "50k_plus";
   timeline: "under_6m" | "6_12m" | "over_12m";
   skillLevel: "beginner" | "intermediate" | "advanced";
   preference: "wet_lab" | "computational" | "mixed";
+  customConstraints: string;
   
   // Step 4: Intent
   intents: string[];
