@@ -97,14 +97,14 @@ router.post('/map/:projectId', async (req, res) => {
                     branch_id: cluster.cluster_id,
                     label,
                     papers: cluster.papers.map(p => ({
-                paperId: p.paperId,
-                title: p.title,
-                year: p.year,
-                authors: p.authors?.slice(0, 3).map(a => a.name).join(', '),
-                abstract: p.abstract,
-                citationCount: p.citationCount,
-                similarity: p.similarity,
-                venue: p.venue
+                        paperId: p.paperId,
+                        title: p.title,
+                        year: p.year,
+                        authors: p.authors?.slice(0, 3).map(a => a.name).join(', '),
+                        abstract: p.abstract,
+                        citationCount: p.citationCount,
+                        similarity: p.similarity,
+                        venue: p.venue
                     })),
                     avgSimilarity: cluster.avgSimilarity
                 };
