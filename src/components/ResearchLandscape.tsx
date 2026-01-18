@@ -22,11 +22,17 @@ import NoveltyRadar from "./NoveltyRadar";
 import FeasibilityPanel from "./FeasibilityPanel";
 import { mockProjects, clusters } from "@/data/mockResearch";
 import { ResearchProject } from "@/types/research";
-import { ArrowLeft } from "lucide-react";
+import { ProjectIntake, DecisionLogEntry } from "@/types/workspace";
+import { ArrowLeft, Plus } from "lucide-react";
 
 interface ResearchLandscapeProps {
   userQuery: string;
   onReset: () => void;
+  intake?: ProjectIntake;
+  onPinEvidence?: (project: ResearchProject) => void;
+  onAddDecision?: (entry: Omit<DecisionLogEntry, "id" | "date">) => void;
+  pinnedEvidenceIds?: string[];
+  hideChatSidebar?: boolean;
 }
 
 const nodeTypes = {
@@ -35,7 +41,7 @@ const nodeTypes = {
   projectNode: ProjectNode,
 };
 
-const ResearchLandscape = ({ userQuery, onReset }: ResearchLandscapeProps) => {
+const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, onAddDecision, pinnedEvidenceIds = [], hideChatSidebar }: ResearchLandscapeProps) => {
   const [selectedProject, setSelectedProject] = useState<ResearchProject | null>(null);
   const [pinnedProjects, setPinnedProjects] = useState<ResearchProject[]>([]);
   const [chatContext, setChatContext] = useState<ResearchProject[]>([]);
@@ -273,14 +279,19 @@ const ResearchLandscape = ({ userQuery, onReset }: ResearchLandscapeProps) => {
           onAddToContext={handleAddToContext}
           onAskAboutText={handleAskAboutText}
           isInContext={chatContext.some(p => p.id === selectedProject.id)}
+          onPinEvidence={onPinEvidence}
+          isPinnedEvidence={pinnedEvidenceIds.includes(selectedProject.id)}
+          onAddDecision={onAddDecision}
         />
       )}
 
-      {/* Chat Sidebar - always visible on the right */}
-      <ChatSidebar
-        contextProjects={chatContext}
-        onRemoveContext={handleRemoveFromContext}
-      />
+      {/* Chat Sidebar - conditionally visible */}
+      {!hideChatSidebar && (
+        <ChatSidebar
+          contextProjects={chatContext}
+          onRemoveContext={handleRemoveFromContext}
+        />
+      )}
     </div>
   );
 };

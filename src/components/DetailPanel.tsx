@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { ResearchProject } from "@/types/research";
-import { X, ExternalLink, CheckCircle, XCircle, Lightbulb, Link2, MessageSquare, Plus } from "lucide-react";
+import { DecisionLogEntry } from "@/types/workspace";
+import { X, ExternalLink, CheckCircle, XCircle, Lightbulb, Link2, MessageSquare, Plus, Pin, Target } from "lucide-react";
 
 interface DetailPanelProps {
   project: ResearchProject | null;
@@ -8,9 +9,12 @@ interface DetailPanelProps {
   onAddToContext?: (project: ResearchProject) => void;
   onAskAboutText?: (text: string, project: ResearchProject) => void;
   isInContext?: boolean;
+  onPinEvidence?: (project: ResearchProject) => void;
+  isPinnedEvidence?: boolean;
+  onAddDecision?: (entry: Omit<DecisionLogEntry, "id" | "date">) => void;
 }
 
-const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInContext }: DetailPanelProps) => {
+const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInContext, onPinEvidence, isPinnedEvidence, onAddDecision }: DetailPanelProps) => {
   const [selectedText, setSelectedText] = useState<string>("");
   const [showAskButton, setShowAskButton] = useState(false);
   const [askButtonPosition, setAskButtonPosition] = useState({ x: 0, y: 0 });
@@ -85,29 +89,55 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
         </button>
       </div>
 
-      {/* Add to Context Button */}
-      {onAddToContext && (
-        <button
-          onClick={() => onAddToContext(project)}
-          className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg mb-4 transition-colors ${
-            isInContext
-              ? "bg-primary/10 text-primary border border-primary/20"
-              : "bg-secondary hover:bg-secondary/80 text-foreground"
-          }`}
-        >
-          {isInContext ? (
-            <>
+      {/* Action Buttons */}
+      <div className="flex gap-2 mb-4">
+        {onAddToContext && (
+          <button
+            onClick={() => onAddToContext(project)}
+            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+              isInContext
+                ? "bg-primary/10 text-primary border border-primary/20"
+                : "bg-secondary hover:bg-secondary/80 text-foreground"
+            }`}
+          >
+            {isInContext ? (
               <CheckCircle className="w-4 h-4" />
-              <span className="text-sm font-medium">In Chat Context</span>
-            </>
-          ) : (
-            <>
-              <Plus className="w-4 h-4" />
-              <span className="text-sm font-medium">Add to Chat Context</span>
-            </>
-          )}
-        </button>
-      )}
+            ) : (
+              <MessageSquare className="w-4 h-4" />
+            )}
+            <span className="text-xs font-medium">{isInContext ? "In Context" : "Add to Chat"}</span>
+          </button>
+        )}
+        
+        {onPinEvidence && (
+          <button
+            onClick={() => onPinEvidence(project)}
+            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+              isPinnedEvidence
+                ? "bg-primary/10 text-primary border border-primary/20"
+                : "bg-secondary hover:bg-secondary/80 text-foreground"
+            }`}
+          >
+            <Pin className="w-4 h-4" />
+            <span className="text-xs font-medium">{isPinnedEvidence ? "Pinned" : "Pin Evidence"}</span>
+          </button>
+        )}
+        
+        {onAddDecision && (
+          <button
+            onClick={() => onAddDecision({
+              decision: `Explore: ${project.title}`,
+              reasoning: project.details.relationToIdea,
+              rejected: "",
+              openQuestions: project.details.keyLessons[0] || "",
+            })}
+            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-secondary hover:bg-secondary/80 text-foreground transition-colors"
+          >
+            <Target className="w-4 h-4" />
+            <span className="text-xs font-medium">Log Decision</span>
+          </button>
+        )}
+      </div>
 
       {/* Similarity indicator */}
       <div className="bg-secondary rounded-lg p-3 mb-6">
