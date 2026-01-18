@@ -11,7 +11,10 @@ import {
 import {
     kmeansClustering
 } from '../services/clustering.js';
-import { generateResearchPapers, clusterByApproach } from '../services/openaiResearch.js';
+import {
+    generateResearchPapers,
+    clusterByApproach
+} from '../services/openaiResearch.js';
 
 const router = express.Router();
 
@@ -30,63 +33,63 @@ router.post('/map/:projectId', async (req, res) => {
             });
         }
 
-    console.log('🤖 Step A: Generating research papers with OpenAI...');
-    // Step A: Generate research papers using OpenAI (no rate limits!)
-    const papers = await generateResearchPapers(project.summary, project.description, 20);
+        console.log('🤖 Step A: Generating research papers with OpenAI...');
+        // Step A: Generate research papers using OpenAI (no rate limits!)
+        const papers = await generateResearchPapers(project.summary, project.description, 20);
 
-    if (papers.length === 0) {
-      console.log('⚠️ No papers generated, saving empty research map');
-      
-      // Store empty research map so we don't get 404
-      const researchMapId = `research_${req.params.projectId}`;
-      researchDB.set(researchMapId, {
-        projectId: req.params.projectId,
-        clusters: [],
-        totalPapers: 0,
-        createdAt: new Date().toISOString(),
-        error: 'Failed to generate research papers.'
-      });
-      
-      return res.json({
-        success: true,
-        message: 'Failed to generate papers.',
-        clusters: [],
-        totalPapers: 0
-      });
-    }
+        if (papers.length === 0) {
+            console.log('⚠️ No papers generated, saving empty research map');
 
-    console.log(`✅ Generated ${papers.length} papers with OpenAI`);
+            // Store empty research map so we don't get 404
+            const researchMapId = `research_${req.params.projectId}`;
+            researchDB.set(researchMapId, {
+                projectId: req.params.projectId,
+                clusters: [],
+                totalPapers: 0,
+                createdAt: new Date().toISOString(),
+                error: 'Failed to generate research papers.'
+            });
 
-    // Step B: Cluster by approach (already in papers from OpenAI)
-    console.log('🎯 Step B: Clustering papers by approach...');
-    const numClusters = Math.min(5, Math.max(3, Math.ceil(papers.length / 4)));
-    const clusters = clusterByApproach(papers, numClusters);
+            return res.json({
+                success: true,
+                message: 'Failed to generate papers.',
+                clusters: [],
+                totalPapers: 0
+            });
+        }
 
-    console.log('🏷️ Step C: Labeling branches...');
-    // Step C: Label each branch using the approach
-    const labeledClusters = clusters.map((cluster, idx) => {
-      // Capitalize and format the approach as the label
-      const label = cluster.approach
-        .split('-')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
+        console.log(`✅ Generated ${papers.length} papers with OpenAI`);
 
-      return {
-        branch_id: cluster.cluster_id,
-        label: label,
-        papers: cluster.papers.map(p => ({
-          paperId: p.paperId,
-          title: p.title,
-          year: p.year,
-          authors: p.authors?.slice(0, 3).map(a => a.name).join(', '),
-          abstract: p.abstract,
-          citationCount: p.citationCount,
-          similarity: 0.85 - (idx * 0.05), // Decreasing similarity for each cluster
-          venue: p.venue
-        })),
-        avgSimilarity: 0.85 - (idx * 0.05)
-      };
-    });
+        // Step B: Cluster by approach (already in papers from OpenAI)
+        console.log('🎯 Step B: Clustering papers by approach...');
+        const numClusters = Math.min(5, Math.max(3, Math.ceil(papers.length / 4)));
+        const clusters = clusterByApproach(papers, numClusters);
+
+        console.log('🏷️ Step C: Labeling branches...');
+        // Step C: Label each branch using the approach
+        const labeledClusters = clusters.map((cluster, idx) => {
+            // Capitalize and format the approach as the label
+            const label = cluster.approach
+                .split('-')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+
+            return {
+                branch_id: cluster.cluster_id,
+                label: label,
+                papers: cluster.papers.map(p => ({
+                    paperId: p.paperId,
+                    title: p.title,
+                    year: p.year,
+                    authors: p.authors?.slice(0, 3).map(a => a.name).join(', '),
+                    abstract: p.abstract,
+                    citationCount: p.citationCount,
+                    similarity: 0.85 - (idx * 0.05), // Decreasing similarity for each cluster
+                    venue: p.venue
+                })),
+                avgSimilarity: 0.85 - (idx * 0.05)
+            };
+        });
 
         // Store research map
         const researchMapId = `research_${req.params.projectId}`;
