@@ -38,20 +38,32 @@ const WorkspaceLayout = ({ intake, onReset, onUpdateIntake }: WorkspaceLayoutPro
     }));
   }, []);
 
-  // Pinned Evidence handlers
+  // Pinned Evidence handlers - toggle pin/unpin
   const handlePinEvidence = useCallback((project: ResearchProject) => {
-    const newEvidence: PinnedEvidenceType = {
-      id: Date.now().toString(),
-      projectId: project.id,
-      projectTitle: project.title,
-      dateAdded: new Date(),
-      tags: [],
-      notes: "",
-    };
-    setWorkspaceState(prev => ({
-      ...prev,
-      pinnedEvidence: [newEvidence, ...prev.pinnedEvidence],
-    }));
+    setWorkspaceState(prev => {
+      const existingIndex = prev.pinnedEvidence.findIndex(e => e.projectId === project.id);
+      if (existingIndex >= 0) {
+        // Unpin - remove from list
+        return {
+          ...prev,
+          pinnedEvidence: prev.pinnedEvidence.filter(e => e.projectId !== project.id),
+        };
+      } else {
+        // Pin - add to list
+        const newEvidence: PinnedEvidenceType = {
+          id: Date.now().toString(),
+          projectId: project.id,
+          projectTitle: project.title,
+          dateAdded: new Date(),
+          tags: [],
+          notes: "",
+        };
+        return {
+          ...prev,
+          pinnedEvidence: [newEvidence, ...prev.pinnedEvidence],
+        };
+      }
+    });
   }, []);
 
   const handleRemoveEvidence = useCallback((id: string) => {
@@ -321,7 +333,6 @@ const WorkspaceLayout = ({ intake, onReset, onUpdateIntake }: WorkspaceLayoutPro
                 onReset={onReset}
                 intake={intake}
                 onPinEvidence={handlePinEvidence}
-                onAddDecision={handleAddDecision}
                 pinnedEvidenceIds={workspaceState.pinnedEvidence.map(e => e.projectId)}
               />
             } />

@@ -1,7 +1,6 @@
 import { useState, useCallback } from "react";
 import { ResearchProject } from "@/types/research";
-import { DecisionLogEntry } from "@/types/workspace";
-import { X, ExternalLink, CheckCircle, XCircle, Lightbulb, Link2, MessageSquare, Plus, Pin, Target } from "lucide-react";
+import { X, ExternalLink, CheckCircle, XCircle, Lightbulb, Link2, MessageSquare, Pin } from "lucide-react";
 
 interface DetailPanelProps {
   project: ResearchProject | null;
@@ -11,10 +10,9 @@ interface DetailPanelProps {
   isInContext?: boolean;
   onPinEvidence?: (project: ResearchProject) => void;
   isPinnedEvidence?: boolean;
-  onAddDecision?: (entry: Omit<DecisionLogEntry, "id" | "date">) => void;
 }
 
-const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInContext, onPinEvidence, isPinnedEvidence, onAddDecision }: DetailPanelProps) => {
+const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInContext, onPinEvidence, isPinnedEvidence }: DetailPanelProps) => {
   const [selectedText, setSelectedText] = useState<string>("");
   const [showAskButton, setShowAskButton] = useState(false);
   const [askButtonPosition, setAskButtonPosition] = useState({ x: 0, y: 0 });
@@ -119,22 +117,7 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
             }`}
           >
             <Pin className="w-4 h-4" />
-            <span className="text-xs font-medium">{isPinnedEvidence ? "Pinned" : "Pin Evidence"}</span>
-          </button>
-        )}
-        
-        {onAddDecision && (
-          <button
-            onClick={() => onAddDecision({
-              decision: `Explore: ${project.title}`,
-              reasoning: project.details.relationToIdea,
-              rejected: "",
-              openQuestions: project.details.keyLessons[0] || "",
-            })}
-            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-secondary hover:bg-secondary/80 text-foreground transition-colors"
-          >
-            <Target className="w-4 h-4" />
-            <span className="text-xs font-medium">Log Decision</span>
+            <span className="text-xs font-medium">{isPinnedEvidence ? "Unpin" : "Pin Evidence"}</span>
           </button>
         )}
       </div>

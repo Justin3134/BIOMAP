@@ -122,14 +122,6 @@ const ComparePanel = ({ projects, onRemove, onClear }: ComparePanelProps) => {
         </table>
       </div>
 
-      {/* Hint */}
-      {projects.length < 3 && (
-        <div className="px-6 pb-3">
-          <p className="text-xs text-muted-foreground">
-            Pin up to 3 projects for comparison. Click the pin icon on any project node.
-          </p>
-        </div>
-      )}
     </div>
   );
 };
