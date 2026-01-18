@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { ProjectIntake } from "@/types/workspace";
-import { ArrowRight, ArrowLeft, Beaker, FlaskConical, Microscope, Cpu, TestTube, Wrench, DollarSign, Clock, Users, Sparkles, BookOpen, Target, CalendarCheck, Search } from "lucide-react";
+import { ArrowRight, ArrowLeft, Beaker, FlaskConical, Microscope, Cpu, TestTube, Wrench, DollarSign, Clock, Users, Sparkles, BookOpen, Target, CalendarCheck, Search, Loader2 } from "lucide-react";
+import { projectAPI, researchAPI } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProjectIntakeWizardProps {
-  onComplete: (intake: ProjectIntake) => void;
+  onComplete: (intake: ProjectIntake & { projectId?: string }) => void;
 }
 
 const CAPABILITIES = [
@@ -24,6 +26,8 @@ const INTENTS = [
 
 const ProjectIntakeWizard = ({ onComplete }: ProjectIntakeWizardProps) => {
   const [step, setStep] = useState(1);
+  const [isCreatingProject, setIsCreatingProject] = useState(false);
+  const { toast } = useToast();
   const [intake, setIntake] = useState<ProjectIntake>({
     title: "",
     goal: "",
@@ -70,9 +74,68 @@ const ProjectIntakeWizard = ({ onComplete }: ProjectIntakeWizardProps) => {
     }
   };
 
-  const handleNext = () => {
-    if (step < 4) setStep(step + 1);
-    else onComplete(intake);
+  const handleNext = async () => {
+    if (step < 4) {
+      setStep(step + 1);
+    } else {
+      // Final step - create project and build research map via backend API
+      setIsCreatingProject(true);
+      
+      try {
+        toast({
+          title: "Creating your project...",
+          description: "Generating AI-powered context summary",
+        });
+
+        // Step 1: Create project with AI summary
+        const project = await projectAPI.create({
+          description: `${intake.title}. ${intake.goal}`,
+          capabilities: {
+            lab: intake.capabilities,
+            custom: intake.customCapabilities
+          },
+          constraints: {
+            budget: intake.budget,
+            timeline: intake.timeline,
+            skillLevel: intake.skillLevel,
+            preference: intake.preference,
+            custom: intake.customConstraints
+          }
+        });
+
+        console.log("Project created:", project);
+
+        toast({
+          title: "Building research map...",
+          description: "This will take ~30 seconds. Searching papers and clustering.",
+        });
+
+        // Step 2: Build research map (the CORE feature)
+        const researchMap = await researchAPI.buildMap(project.id);
+        
+        console.log("Research map built:", researchMap);
+
+        toast({
+          title: "Success!",
+          description: `Found ${researchMap.totalPapers} papers in ${researchMap.clusters.length} branches`,
+        });
+
+        // Pass the intake data + projectId to workspace
+        onComplete({
+          ...intake,
+          projectId: project.id
+        });
+        
+      } catch (error) {
+        console.error("Error creating project:", error);
+        toast({
+          title: "Error",
+          description: error instanceof Error ? error.message : "Failed to create project",
+          variant: "destructive",
+        });
+        setIsCreatingProject(false);
+      }
+    }
   };
 
   return (
@@ -390,10 +453,15 @@ const ProjectIntakeWizard = ({ onComplete }: ProjectIntakeWizardProps) => {
 
             <button
               onClick={handleNext}
-              disabled={!canProceed()}
+              disabled={!canProceed() || isCreatingProject}
               className="flex items-center gap-2 px-6 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {step === 4 ? (
+              {isCreatingProject ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Building Research Map...
+                </>
+              ) : step === 4 ? (
                 <>
                   <Sparkles className="w-4 h-4" />
                   Enter Workspace

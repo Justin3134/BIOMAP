@@ -21,12 +21,13 @@ import FeasibilityPanel from "./FeasibilityPanel";
 import { mockProjects, clusters } from "@/data/mockResearch";
 import { ResearchProject } from "@/types/research";
 import { ProjectIntake } from "@/types/workspace";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
+import { researchAPI } from "@/lib/api";
 
 interface ResearchLandscapeProps {
   userQuery: string;
   onReset: () => void;
-  intake?: ProjectIntake;
+  intake?: ProjectIntake & { projectId?: string };
   onPinEvidence?: (project: ResearchProject) => void;
   pinnedEvidenceIds?: string[];
   hideChatSidebar?: boolean;
@@ -43,6 +44,71 @@ const nodeTypes = {
 const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEvidenceIds = [], hideChatSidebar, chatContext = [], onAddToContext }: ResearchLandscapeProps) => {
   const [selectedProject, setSelectedProject] = useState<ResearchProject | null>(null);
   const [isLocked, setIsLocked] = useState(false);
+  const [researchClusters, setResearchClusters] = useState<any[]>([]);
+  const [researchProjects, setResearchProjects] = useState<ResearchProject[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch real research map from backend
+  useEffect(() => {
+    const fetchResearchMap = async () => {
+      if (!intake?.projectId) {
+        // No projectId - use mock data
+        setResearchClusters(clusters);
+        setResearchProjects(mockProjects);
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        const map = await researchAPI.getMap(intake.projectId);
+        
+        // Transform backend data to frontend format
+        const transformedClusters = map.clusters.map((cluster: any) => ({
+          id: cluster.branch_id,
+          label: cluster.label,
+          description: `${cluster.papers.length} papers (avg similarity: ${(cluster.avgSimilarity * 100).toFixed(0)}%)`,
+        }));
+
+        const transformedProjects: ResearchProject[] = [];
+        map.clusters.forEach((cluster: any) => {
+          cluster.papers.forEach((paper: any) => {
+            transformedProjects.push({
+              id: paper.paperId,
+              title: paper.title,
+              year: paper.year,
+              authors: paper.authors || "Unknown",
+              similarity: paper.similarity,
+              novelty: paper.similarity > 0.8 ? "high" : paper.similarity > 0.6 ? "medium" : "low",
+              feasibility: "medium", // Could be enhanced with more logic
+              cluster: cluster.branch_id,
+              tags: [],
+              abstract: paper.abstract,
+              citations: paper.citationCount || 0,
+            });
+          });
+        });
+
+        setResearchClusters(transformedClusters);
+        setResearchProjects(transformedProjects);
+        setIsLoading(false);
+        
+        console.log(`Loaded ${transformedProjects.length} papers in ${transformedClusters.length} clusters`);
+      } catch (err) {
+        console.error("Failed to load research map:", err);
+        setError(err instanceof Error ? err.message : "Failed to load research map");
+        // Fallback to mock data
+        setResearchClusters(clusters);
+        setResearchProjects(mockProjects);
+        setIsLoading(false);
+      }
+    };
+
+    fetchResearchMap();
+  }, [intake?.projectId]);
 
   const handleSelectProject = useCallback((project: ResearchProject) => {
     setSelectedProject(project);
@@ -73,10 +139,10 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
     // Cluster nodes spread horizontally
     const clusterSpacing = 280;
     const clusterY = 180;
-    const startX = 400 - ((clusters.length - 1) * clusterSpacing) / 2;
+    const startX = 400 - ((researchClusters.length - 1) * clusterSpacing) / 2;
 
-    clusters.forEach((cluster, index) => {
-      const projectsInCluster = mockProjects.filter(p => p.cluster === cluster.id);
+    researchClusters.forEach((cluster, index) => {
+      const projectsInCluster = researchProjects.filter(p => p.cluster === cluster.id);
       
       nodes.push({
         id: `cluster-${cluster.id}`,
@@ -133,7 +199,7 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
     });
 
     return { initialNodes: nodes, initialEdges: edges };
-  }, [userQuery, selectedProject, handleSelectProject]);
+  }, [userQuery, selectedProject, handleSelectProject, researchClusters, researchProjects]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
@@ -208,10 +274,28 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
           />
         </ReactFlow>
 
+        {/* Loading indicator */}
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-20">
+            <div className="text-center">
+              <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
+              <p className="text-lg font-medium">Building your research landscape...</p>
+              <p className="text-sm text-muted-foreground">Analyzing papers and clustering approaches</p>
+            </div>
+          </div>
+        )}
+
+        {/* Error message */}
+        {error && !isLoading && (
+          <div className="absolute top-24 left-1/2 -translate-x-1/2 z-10 bg-destructive/10 border border-destructive text-destructive px-4 py-2 rounded-lg">
+            {error}
+          </div>
+        )}
+
         {/* Left panels stack - scrollable container */}
         <div className="absolute bottom-6 left-6 z-10 flex flex-col gap-2 max-h-[calc(100vh-120px)] overflow-y-auto scrollbar-thin">
-          <NoveltyRadar clusters={clusters} projects={mockProjects} />
-          <FeasibilityPanel clusters={clusters} projects={mockProjects} />
+          <NoveltyRadar clusters={researchClusters} projects={researchProjects} />
+          <FeasibilityPanel clusters={researchClusters} projects={researchProjects} />
           <InsightPanel />
         </div>
       </div>

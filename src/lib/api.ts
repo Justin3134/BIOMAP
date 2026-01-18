@@ -200,6 +200,8 @@ export const chatAPI = {
 
 // Health check
 export const healthCheck = async (): Promise<{ status: string; message: string }> => {
-  return apiCall('/health', { method: 'GET' });
+  const url = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3001';
+  const response = await fetch(`${url}/health`);
+  return response.json();
 };
 
