@@ -28,10 +28,12 @@ const ProjectIntakeWizard = ({ onComplete }: ProjectIntakeWizardProps) => {
     goal: "",
     successCriteria: "",
     capabilities: [],
+    customCapabilities: "",
     budget: "10k_50k",
     timeline: "6_12m",
     skillLevel: "intermediate",
     preference: "mixed",
+    customConstraints: "",
     intents: [],
   });
 
@@ -162,6 +164,19 @@ const ProjectIntakeWizard = ({ onComplete }: ProjectIntakeWizardProps) => {
                   );
                 })}
               </div>
+
+              {/* Custom capabilities input */}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Other resources or equipment <span className="text-muted-foreground">(optional)</span>
+                </label>
+                <textarea
+                  value={intake.customCapabilities}
+                  onChange={(e) => updateIntake({ customCapabilities: e.target.value })}
+                  placeholder="e.g., Access to a greenhouse, HPLC machine, specific software licenses..."
+                  className="w-full h-20 bg-secondary border-0 rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+                />
+              </div>
             </div>
           )}
 
@@ -284,6 +299,19 @@ const ProjectIntakeWizard = ({ onComplete }: ProjectIntakeWizardProps) => {
                       </button>
                     ))}
                   </div>
+                </div>
+
+                {/* Custom constraints input */}
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Other constraints or considerations <span className="text-muted-foreground">(optional)</span>
+                  </label>
+                  <textarea
+                    value={intake.customConstraints}
+                    onChange={(e) => updateIntake({ customConstraints: e.target.value })}
+                    placeholder="e.g., Limited access to certain reagents, regulatory requirements, geographic limitations..."
+                    className="w-full h-20 bg-secondary border-0 rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+                  />
                 </div>
               </div>
             </div>
