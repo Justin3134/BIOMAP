@@ -14,6 +14,10 @@ import {
 import {
     searchPapers
 } from '../services/semanticScholar.js';
+import {
+    generateResearchPapers,
+    clusterByApproach
+} from '../services/openaiResearch.js';
 
 const router = express.Router();
 
@@ -32,89 +36,128 @@ router.post('/map/:projectId', async (req, res) => {
             });
         }
 
-        console.log('🔍 Step A: Searching for REAL research papers...');
-        // Step A: Search Semantic Scholar for REAL papers with retry logic
-        const searchQuery = project.summary;
-        let papers = await searchPapers(searchQuery, 20);
+        console.log('🔍 Step A: Searching for research papers...');
+        
+        let papers = [];
+        let useAIGenerated = false;
+        
+        // Try Semantic Scholar first
+        try {
+            const searchQuery = project.summary;
+            papers = await searchPapers(searchQuery, 20);
 
-        // If Semantic Scholar fails, try a simpler query
+            // If Semantic Scholar fails, try a simpler query
+            if (papers.length === 0) {
+                console.log('⚠️ No papers found, trying simpler search...');
+                const simpleQuery = project.description.split('.')[0];
+                papers = await searchPapers(simpleQuery, 20);
+            }
+        } catch (error) {
+            console.log('⚠️ Semantic Scholar failed:', error.message);
+        }
+
+        // Fallback to AI-generated papers if Semantic Scholar fails
         if (papers.length === 0) {
-            console.log('⚠️ No papers found, trying simpler search...');
-            const simpleQuery = project.description.split('.')[0]; // Use first sentence
-            papers = await searchPapers(simpleQuery, 20);
+            console.log('🤖 Falling back to AI-generated research papers...');
+            papers = await generateResearchPapers(project.summary, project.description, 15);
+            useAIGenerated = true;
         }
 
         if (papers.length === 0) {
-            console.log('⚠️ No papers found, saving empty research map');
-
-            // Store empty research map so we don't get 404
+            console.log('❌ Could not generate any papers');
             const researchMapId = `research_${req.params.projectId}`;
             researchDB.set(researchMapId, {
                 projectId: req.params.projectId,
                 clusters: [],
                 totalPapers: 0,
                 createdAt: new Date().toISOString(),
-                error: 'No papers found. Try a broader search query or wait for API rate limits to reset.'
+                error: 'Failed to generate research papers'
             });
 
             return res.json({
-                success: true,
-                message: 'No papers found. API may be rate limited.',
+                success: false,
+                message: 'Failed to generate research papers',
                 clusters: [],
                 totalPapers: 0
             });
         }
 
-        console.log(`✅ Found ${papers.length} REAL papers from Semantic Scholar`);
+        console.log(`✅ Found ${papers.length} papers (${useAIGenerated ? 'AI-generated' : 'from Semantic Scholar'})`);
 
-        // Step B: Generate embeddings and cluster by similarity
-        console.log('🧮 Step B: Generating embeddings...');
-        const projectEmbedding = await generateEmbedding(project.summary);
+        let labeledClusters;
+        
+        if (useAIGenerated) {
+            // For AI-generated papers, use approach-based clustering (faster, no embeddings needed)
+            console.log('🗂️ Clustering AI papers by approach...');
+            const clusters = clusterByApproach(papers, 5);
+            
+            labeledClusters = clusters.map(cluster => ({
+                branch_id: cluster.cluster_id,
+                label: cluster.label,
+                papers: cluster.papers.map(p => ({
+                    paperId: p.paperId,
+                    title: p.title,
+                    year: p.year,
+                    authors: p.authors?.slice(0, 3).map(a => a.name).join(', '),
+                    abstract: p.abstract,
+                    citationCount: p.citationCount,
+                    similarity: p.similarity,
+                    venue: p.venue,
+                    url: null, // AI-generated papers don't have real URLs
+                    isAIGenerated: true
+                })),
+                avgSimilarity: cluster.avgSimilarity
+            }));
+        } else {
+            // For real papers from Semantic Scholar, use embedding-based clustering
+            console.log('🧮 Step B: Generating embeddings...');
+            const projectEmbedding = await generateEmbedding(project.summary);
 
-        const papersWithEmbeddings = await Promise.all(
-            papers.map(async (paper) => {
-                const text = paper.abstract || paper.title || '';
-                const embedding = await generateEmbedding(text.substring(0, 1000));
-                return {
-                    ...paper,
-                    embedding
-                };
-            })
-        );
+            const papersWithEmbeddings = await Promise.all(
+                papers.map(async (paper) => {
+                    const text = paper.abstract || paper.title || '';
+                    const embedding = await generateEmbedding(text.substring(0, 1000));
+                    return {
+                        ...paper,
+                        embedding
+                    };
+                })
+            );
 
-        console.log('🎯 Step C: Clustering papers...');
-        const numClusters = Math.min(5, Math.max(3, Math.ceil(papers.length / 4)));
-        const clusters = kmeansClustering(papersWithEmbeddings, projectEmbedding, numClusters);
+            console.log('🎯 Step C: Clustering papers...');
+            const numClusters = Math.min(5, Math.max(3, Math.ceil(papers.length / 4)));
+            const clusters = kmeansClustering(papersWithEmbeddings, projectEmbedding, numClusters);
 
-        console.log('🏷️ Step D: Labeling branches with AI...');
-        // Step D: Label each branch using AI
-        const labeledClusters = await Promise.all(
-            clusters.map(async (cluster) => {
-                const abstracts = cluster.papers
-                    .slice(0, 3)
-                    .map(p => p.abstract || p.title)
-                    .filter(Boolean);
+            console.log('🏷️ Step D: Labeling branches with AI...');
+            labeledClusters = await Promise.all(
+                clusters.map(async (cluster) => {
+                    const abstracts = cluster.papers
+                        .slice(0, 3)
+                        .map(p => p.abstract || p.title)
+                        .filter(Boolean);
 
-                const label = await labelCluster(abstracts);
+                    const label = await labelCluster(abstracts);
 
-                return {
-                    branch_id: cluster.cluster_id,
-                    label,
-                    papers: cluster.papers.map(p => ({
-                        paperId: p.paperId,
-                        title: p.title,
-                        year: p.year,
-                        authors: p.authors?.slice(0, 3).map(a => a.name).join(', '),
-                        abstract: p.abstract,
-                        citationCount: p.citationCount,
-                        similarity: p.similarity,
-                        venue: p.venue,
-                        url: p.paperId ? `https://www.semanticscholar.org/paper/${p.paperId}` : null
-                    })),
-                    avgSimilarity: cluster.avgSimilarity
-                };
-            })
-        );
+                    return {
+                        branch_id: cluster.cluster_id,
+                        label,
+                        papers: cluster.papers.map(p => ({
+                            paperId: p.paperId,
+                            title: p.title,
+                            year: p.year,
+                            authors: p.authors?.slice(0, 3).map(a => a.name).join(', '),
+                            abstract: p.abstract,
+                            citationCount: p.citationCount,
+                            similarity: p.similarity,
+                            venue: p.venue,
+                            url: p.paperId ? `https://www.semanticscholar.org/paper/${p.paperId}` : null,
+                            isAIGenerated: false
+                        })),
+                        avgSimilarity: cluster.avgSimilarity
+                    };
+                })
+            );
+        }
 
         // Store research map
         const researchMapId = `research_${req.params.projectId}`;

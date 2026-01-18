@@ -321,7 +321,7 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
         <div className="absolute bottom-6 left-6 z-10 flex flex-col gap-2 max-h-[calc(100vh-120px)] overflow-y-auto scrollbar-thin">
           <NoveltyRadar clusters={researchClusters} projects={researchProjects} />
           <FeasibilityPanel clusters={researchClusters} projects={researchProjects} />
-          <InsightPanel />
+          <InsightPanel clusters={researchClusters} projects={researchProjects} />
         </div>
       </div>
 
