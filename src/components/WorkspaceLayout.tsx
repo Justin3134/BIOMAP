@@ -83,6 +83,19 @@ const WorkspaceLayout = ({ intake, onReset, onUpdateIntake }: WorkspaceLayoutPro
   }, []);
 
   // Chat context handlers
+  const handleAddToContext = useCallback((project: ResearchProject) => {
+    setChatContext(prev => {
+      const isAlreadyInContext = prev.some(p => p.id === project.id);
+      if (isAlreadyInContext) {
+        return prev.filter(p => p.id !== project.id);
+      }
+      if (prev.length >= 3) {
+        return [...prev.slice(1), project];
+      }
+      return [...prev, project];
+    });
+  }, []);
+
   const handleRemoveFromContext = useCallback((projectId: string) => {
     setChatContext(prev => prev.filter(p => p.id !== projectId));
   }, []);
@@ -334,6 +347,8 @@ const WorkspaceLayout = ({ intake, onReset, onUpdateIntake }: WorkspaceLayoutPro
                 intake={intake}
                 onPinEvidence={handlePinEvidence}
                 pinnedEvidenceIds={workspaceState.pinnedEvidence.map(e => e.projectId)}
+                chatContext={chatContext}
+                onAddToContext={handleAddToContext}
               />
             } />
             <Route path="/evidence" element={
