@@ -6,14 +6,15 @@ import PinnedEvidence from "./PinnedEvidence";
 import ChatSidebar from "./ChatSidebar";
 import { ProjectIntake, WorkspaceState, DecisionLogEntry, PinnedEvidence as PinnedEvidenceType } from "@/types/workspace";
 import { ResearchProject } from "@/types/research";
-import { FileText } from "lucide-react";
+import { FileText, Save } from "lucide-react";
 
 interface WorkspaceLayoutProps {
   intake: ProjectIntake;
   onReset: () => void;
+  onUpdateIntake: (intake: ProjectIntake) => void;
 }
 
-const WorkspaceLayout = ({ intake, onReset }: WorkspaceLayoutProps) => {
+const WorkspaceLayout = ({ intake, onReset, onUpdateIntake }: WorkspaceLayoutProps) => {
   const [workspaceState, setWorkspaceState] = useState<WorkspaceState>({
     intake,
     pinnedEvidence: [],
@@ -90,88 +91,219 @@ const WorkspaceLayout = ({ intake, onReset }: WorkspaceLayoutProps) => {
     </div>
   );
 
-  // Overview page component
-  const OverviewPage = () => (
-    <div className="h-full overflow-y-auto p-6">
-      <h1 className="font-serif text-2xl font-semibold text-foreground mb-2">Project Overview</h1>
-      <p className="text-sm text-muted-foreground mb-6">
-        Your research workspace at a glance
-      </p>
+  // Overview page component with editing
+  const OverviewPage = () => {
+    const [editedIntake, setEditedIntake] = useState<ProjectIntake>(intake);
+    const [hasChanges, setHasChanges] = useState(false);
 
-      {/* Project Goal */}
-      <div className="bg-card border border-border rounded-xl p-5 mb-4">
-        <h3 className="font-medium text-foreground mb-2">Project Goal</h3>
-        <p className="text-sm text-muted-foreground">{intake.goal}</p>
-        {intake.successCriteria && (
-          <div className="mt-3 pt-3 border-t border-border">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+    const updateField = (field: keyof ProjectIntake, value: string) => {
+      setEditedIntake(prev => ({ ...prev, [field]: value }));
+      setHasChanges(true);
+    };
+
+    const handleSave = () => {
+      onUpdateIntake(editedIntake);
+      setHasChanges(false);
+    };
+
+    return (
+      <div className="h-full overflow-y-auto p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="font-serif text-2xl font-semibold text-foreground mb-1">Project Overview</h1>
+            <p className="text-sm text-muted-foreground">
+              Edit your project details below
+            </p>
+          </div>
+        </div>
+
+        {/* Project Goal */}
+        <div className="bg-card border border-border rounded-xl p-5 mb-4">
+          <label className="block font-medium text-foreground mb-2">Project Goal</label>
+          <textarea
+            value={editedIntake.goal}
+            onChange={(e) => updateField("goal", e.target.value)}
+            className="w-full h-24 bg-secondary border-0 rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+          />
+          
+          <div className="mt-4">
+            <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
               Success Criteria
-            </span>
-            <p className="text-sm text-foreground mt-1">{intake.successCriteria}</p>
+            </label>
+            <textarea
+              value={editedIntake.successCriteria}
+              onChange={(e) => updateField("successCriteria", e.target.value)}
+              placeholder="What would count as success?"
+              className="w-full h-16 bg-secondary border-0 rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+            />
           </div>
-        )}
-      </div>
+        </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-card border border-border rounded-xl p-4 text-center">
-          <span className="text-2xl font-semibold text-primary">{workspaceState.pinnedEvidence.length}</span>
-          <p className="text-xs text-muted-foreground mt-1">Pinned Evidence</p>
+        {/* Quick Stats */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="bg-card border border-border rounded-xl p-4 text-center">
+            <span className="text-2xl font-semibold text-primary">{workspaceState.pinnedEvidence.length}</span>
+            <p className="text-xs text-muted-foreground mt-1">Pinned Evidence</p>
+          </div>
+          <div className="bg-card border border-border rounded-xl p-4 text-center">
+            <span className="text-2xl font-semibold text-primary">{workspaceState.decisionLog.length}</span>
+            <p className="text-xs text-muted-foreground mt-1">Decisions Logged</p>
+          </div>
         </div>
-        <div className="bg-card border border-border rounded-xl p-4 text-center">
-          <span className="text-2xl font-semibold text-primary">{workspaceState.decisionLog.length}</span>
-          <p className="text-xs text-muted-foreground mt-1">Decisions Logged</p>
-        </div>
-        <div className="bg-card border border-border rounded-xl p-4 text-center">
-          <span className="text-2xl font-semibold text-primary">{workspaceState.weeklyLog.length}</span>
-          <p className="text-xs text-muted-foreground mt-1">Weekly Entries</p>
-        </div>
-      </div>
 
-      {/* Constraints Summary */}
-      <div className="bg-card border border-border rounded-xl p-5 mb-4">
-        <h3 className="font-medium text-foreground mb-3">Your Constraints</h3>
-        <div className="grid grid-cols-2 gap-3 text-sm">
-          <div>
-            <span className="text-muted-foreground">Budget:</span>
-            <span className="text-foreground ml-2">
-              {intake.budget === "under_10k" ? "< $10K" : intake.budget === "10k_50k" ? "$10K-$50K" : "$50K+"}
-            </span>
+        {/* Constraints Summary */}
+        <div className="bg-card border border-border rounded-xl p-5 mb-4">
+          <h3 className="font-medium text-foreground mb-3">Your Constraints</h3>
+          
+          {/* Budget */}
+          <div className="mb-4">
+            <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Budget</label>
+            <div className="flex gap-2">
+              {[
+                { id: "under_10k", label: "< $10K" },
+                { id: "10k_50k", label: "$10K - $50K" },
+                { id: "50k_plus", label: "$50K+" },
+              ].map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => {
+                    setEditedIntake(prev => ({ ...prev, budget: opt.id as ProjectIntake["budget"] }));
+                    setHasChanges(true);
+                  }}
+                  className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                    editedIntake.budget === opt.id
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
-          <div>
-            <span className="text-muted-foreground">Timeline:</span>
-            <span className="text-foreground ml-2">
-              {intake.timeline === "under_6m" ? "< 6 months" : intake.timeline === "6_12m" ? "6-12 months" : "12+ months"}
-            </span>
+
+          {/* Timeline */}
+          <div className="mb-4">
+            <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Timeline</label>
+            <div className="flex gap-2">
+              {[
+                { id: "under_6m", label: "< 6 months" },
+                { id: "6_12m", label: "6-12 months" },
+                { id: "over_12m", label: "12+ months" },
+              ].map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => {
+                    setEditedIntake(prev => ({ ...prev, timeline: opt.id as ProjectIntake["timeline"] }));
+                    setHasChanges(true);
+                  }}
+                  className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                    editedIntake.timeline === opt.id
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
-          <div>
-            <span className="text-muted-foreground">Skill Level:</span>
-            <span className="text-foreground ml-2 capitalize">{intake.skillLevel}</span>
+
+          {/* Skill Level */}
+          <div className="mb-4">
+            <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Skill Level</label>
+            <div className="flex gap-2">
+              {[
+                { id: "beginner", label: "Beginner" },
+                { id: "intermediate", label: "Intermediate" },
+                { id: "advanced", label: "Advanced" },
+              ].map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => {
+                    setEditedIntake(prev => ({ ...prev, skillLevel: opt.id as ProjectIntake["skillLevel"] }));
+                    setHasChanges(true);
+                  }}
+                  className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                    editedIntake.skillLevel === opt.id
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
-          <div>
-            <span className="text-muted-foreground">Preference:</span>
-            <span className="text-foreground ml-2 capitalize">{intake.preference.replace("_", " ")}</span>
+
+          {/* Preference */}
+          <div className="mb-4">
+            <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Approach Preference</label>
+            <div className="flex gap-2">
+              {[
+                { id: "wet_lab", label: "Wet Lab" },
+                { id: "computational", label: "Computational" },
+                { id: "mixed", label: "Mixed" },
+              ].map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => {
+                    setEditedIntake(prev => ({ ...prev, preference: opt.id as ProjectIntake["preference"] }));
+                    setHasChanges(true);
+                  }}
+                  className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                    editedIntake.preference === opt.id
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
-        {intake.customConstraints && (
-          <div className="mt-3 pt-3 border-t border-border">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+
+          {/* Custom Constraints */}
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
               Additional Constraints
-            </span>
-            <p className="text-sm text-foreground mt-1">{intake.customConstraints}</p>
+            </label>
+            <textarea
+              value={editedIntake.customConstraints}
+              onChange={(e) => updateField("customConstraints", e.target.value)}
+              placeholder="Any other constraints..."
+              className="w-full h-16 bg-secondary border-0 rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+            />
           </div>
-        )}
-      </div>
-
-      {/* Capabilities Summary */}
-      {intake.customCapabilities && (
-        <div className="bg-card border border-border rounded-xl p-5">
-          <h3 className="font-medium text-foreground mb-2">Additional Resources</h3>
-          <p className="text-sm text-muted-foreground">{intake.customCapabilities}</p>
         </div>
-      )}
-    </div>
-  );
+
+        {/* Additional Resources */}
+        <div className="bg-card border border-border rounded-xl p-5 mb-6">
+          <label className="block font-medium text-foreground mb-2">Additional Resources</label>
+          <textarea
+            value={editedIntake.customCapabilities}
+            onChange={(e) => updateField("customCapabilities", e.target.value)}
+            placeholder="Equipment, software, or other resources you have access to..."
+            className="w-full h-16 bg-secondary border-0 rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+          />
+        </div>
+
+        {/* Update Button */}
+        <button
+          onClick={handleSave}
+          disabled={!hasChanges}
+          className={`w-full flex items-center justify-center gap-2 py-3 px-6 rounded-xl font-medium transition-colors ${
+            hasChanges
+              ? "bg-primary text-primary-foreground hover:bg-primary/90"
+              : "bg-secondary text-muted-foreground cursor-not-allowed"
+          }`}
+        >
+          <Save className="w-4 h-4" />
+          Update Project
+        </button>
+      </div>
+    );
+  };
 
   return (
     <div className="h-screen flex bg-background">
