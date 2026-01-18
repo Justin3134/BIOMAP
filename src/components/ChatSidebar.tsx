@@ -41,8 +41,10 @@ const ChatSidebar = ({ contextProjects, onRemoveContext, onAskAboutText }: ChatS
 
   const generateMockResponse = (userMessage: string): ChatMessage => {
     const projectTitles = contextProjects.map(p => p.title);
+    const hasContext = contextProjects.length > 0;
     
-    const responses: Record<string, string> = {
+    // Responses for when context is selected
+    const contextResponses: Record<string, string> = {
       "failure risks": `Based on the selected research, the main failure risks include: scaling challenges when moving from lab to field conditions, unexpected environmental interactions, and regulatory approval timelines. Most similar projects encountered difficulties with reproducibility outside controlled settings.`,
       "cheapest": `Looking at similar approaches, the most cost-effective path would be to start with computational modeling before any wet lab work. Projects that validated hypotheses in silico first saved 40-60% on initial costs.`,
       "combine": `Your idea could integrate well with the enzyme optimization techniques from the selected research. Consider adapting their substrate specificity methods while maintaining your unique approach to delivery mechanisms.`,
@@ -51,25 +53,53 @@ const ChatSidebar = ({ contextProjects, onRemoveContext, onAskAboutText }: ChatS
       "2 weeks": `For a 2-week sprint: Focus solely on proof-of-concept using existing protocols from similar research. Skip optimization—just demonstrate feasibility. Use the enzyme systems already validated in the literature.`,
     };
 
+    // General research map responses (no context needed)
+    const generalResponses: Record<string, string> = {
+      "cluster": `The research map shows 4 main clusters: Enzyme Engineering (core biotech approaches), Gene Editing (CRISPR-based methods), Synthetic Biology (pathway construction), and Bioinformatics (computational tools). Each cluster contains related projects that share methodologies or applications.`,
+      "map": `Your research map visualizes 18 related research projects organized by similarity. The central node represents your project idea. Connected nodes are projects with higher relevance to your concept. You can click on any node to see details and add it to our chat context.`,
+      "overview": `I can see the full research landscape including all clusters and their relationships. The map shows how different research directions connect to your core idea, highlighting potential synergies and alternative approaches worth exploring.`,
+      "trend": `Looking at the research map, key trends include: increasing focus on computational pre-validation, growing integration of AI/ML in experimental design, and a shift toward modular, combinable research components.`,
+      "gap": `Analyzing the research landscape, I notice potential gaps in: long-term stability studies, scalability validation, and cross-domain applications. These could represent opportunities for novel contributions.`,
+      "recommend": `Based on the overall research map, I'd recommend exploring the Enzyme Engineering cluster first—it shows the most established methodologies that could accelerate your initial work. The Synthetic Biology cluster offers good complementary approaches for later phases.`,
+    };
+
     const lowerMessage = userMessage.toLowerCase();
-    let responseContent = "Based on the selected research context, I can help you explore this further. Could you be more specific about what aspect you'd like to understand better?";
+    let responseContent = "";
     
-    for (const [key, response] of Object.entries(responses)) {
-      if (lowerMessage.includes(key)) {
-        responseContent = response;
-        break;
+    // First check for context-specific responses if projects are selected
+    if (hasContext) {
+      for (const [key, response] of Object.entries(contextResponses)) {
+        if (lowerMessage.includes(key)) {
+          responseContent = response;
+          break;
+        }
       }
     }
-
-    if (contextProjects.length === 0) {
-      responseContent = "Please select at least one research project from the canvas to provide context for our discussion. Click on any project node to add it to the context.";
+    
+    // If no context match, check general research map questions
+    if (!responseContent) {
+      for (const [key, response] of Object.entries(generalResponses)) {
+        if (lowerMessage.includes(key)) {
+          responseContent = response;
+          break;
+        }
+      }
+    }
+    
+    // Default response based on context availability
+    if (!responseContent) {
+      if (hasContext) {
+        responseContent = "Based on the selected research context, I can help you explore this further. Could you be more specific about what aspect you'd like to understand better?";
+      } else {
+        responseContent = "I can answer questions about the research map, clusters, trends, and overall landscape. For specific project questions, select a project from the canvas to add context. Try asking about 'clusters', 'trends', or 'recommendations'!";
+      }
     }
 
     return {
       id: Date.now().toString(),
       role: "assistant",
       content: responseContent,
-      basedOn: contextProjects.length > 0 ? projectTitles : undefined,
+      basedOn: hasContext ? projectTitles : undefined,
     };
   };
 
@@ -178,8 +208,15 @@ const ChatSidebar = ({ contextProjects, onRemoveContext, onAskAboutText }: ChatS
           <div className="text-center py-8">
             <Sparkles className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
             <p className="text-sm text-muted-foreground">
-              Select research projects and ask questions about them
+              {contextProjects.length > 0 
+                ? "Ask questions about the selected research"
+                : "Ask about the research map, clusters, or trends"}
             </p>
+            {contextProjects.length === 0 && (
+              <p className="text-xs text-muted-foreground/70 mt-2">
+                Or select projects for specific questions
+              </p>
+            )}
           </div>
         )}
         
@@ -237,16 +274,52 @@ const ChatSidebar = ({ contextProjects, onRemoveContext, onAskAboutText }: ChatS
       {/* Smart Prompts */}
       <div className="px-4 pb-2">
         <div className="flex flex-wrap gap-1.5">
-          {SMART_PROMPTS.map((item, i) => (
-            <button
-              key={i}
-              onClick={() => handleSend(item.prompt)}
-              disabled={contextProjects.length === 0}
-              className="px-2.5 py-1 text-xs bg-secondary hover:bg-secondary/80 text-foreground rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {item.label}
-            </button>
-          ))}
+          {contextProjects.length > 0 ? (
+            // Context-specific prompts
+            SMART_PROMPTS.map((item, i) => (
+              <button
+                key={i}
+                onClick={() => handleSend(item.prompt)}
+                className="px-2.5 py-1 text-xs bg-secondary hover:bg-secondary/80 text-foreground rounded-full transition-colors"
+              >
+                {item.label}
+              </button>
+            ))
+          ) : (
+            // General research map prompts
+            <>
+              <button
+                onClick={() => handleSend("Give me an overview of the research map")}
+                className="px-2.5 py-1 text-xs bg-secondary hover:bg-secondary/80 text-foreground rounded-full transition-colors"
+              >
+                Map overview
+              </button>
+              <button
+                onClick={() => handleSend("What clusters are in the research?")}
+                className="px-2.5 py-1 text-xs bg-secondary hover:bg-secondary/80 text-foreground rounded-full transition-colors"
+              >
+                Clusters
+              </button>
+              <button
+                onClick={() => handleSend("What trends do you see?")}
+                className="px-2.5 py-1 text-xs bg-secondary hover:bg-secondary/80 text-foreground rounded-full transition-colors"
+              >
+                Trends
+              </button>
+              <button
+                onClick={() => handleSend("What are the research gaps?")}
+                className="px-2.5 py-1 text-xs bg-secondary hover:bg-secondary/80 text-foreground rounded-full transition-colors"
+              >
+                Gaps
+              </button>
+              <button
+                onClick={() => handleSend("What do you recommend exploring first?")}
+                className="px-2.5 py-1 text-xs bg-secondary hover:bg-secondary/80 text-foreground rounded-full transition-colors"
+              >
+                Recommendations
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -258,13 +331,12 @@ const ChatSidebar = ({ contextProjects, onRemoveContext, onAskAboutText }: ChatS
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={contextProjects.length > 0 ? "Ask about selected research..." : "Select a project first..."}
-            disabled={contextProjects.length === 0}
-            className="flex-1 bg-secondary border-0 rounded-lg px-4 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
+            placeholder={contextProjects.length > 0 ? "Ask about selected research..." : "Ask about the research map..."}
+            className="flex-1 bg-secondary border-0 rounded-lg px-4 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
           <button
             onClick={() => handleSend()}
-            disabled={!input.trim() || contextProjects.length === 0}
+            disabled={!input.trim()}
             className="p-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Send className="w-4 h-4" />
