@@ -88,6 +88,8 @@ Return ONLY a valid JSON array of papers in this exact format:
  * Cluster papers by their approach field
  */
 export function clusterByApproach(papers, numClusters = 4) {
+  console.log(`📊 Clustering ${papers.length} papers...`);
+  
   // Group by approach
   const approachGroups = {};
   
@@ -99,6 +101,8 @@ export function clusterByApproach(papers, numClusters = 4) {
     approachGroups[approach].push(paper);
   });
   
+  console.log(`📁 Found ${Object.keys(approachGroups).length} unique approaches`);
+  
   // Convert to clusters
   const clusters = Object.entries(approachGroups)
     .slice(0, numClusters)
@@ -108,6 +112,7 @@ export function clusterByApproach(papers, numClusters = 4) {
       papers: papers
     }));
   
+  console.log(`✅ Created ${clusters.length} clusters`);
   return clusters;
 }
 
