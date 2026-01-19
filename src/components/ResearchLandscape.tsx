@@ -229,6 +229,13 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
+  // Force update nodes and edges when data changes
+  useEffect(() => {
+    console.log(`Updating React Flow with ${initialNodes.length} nodes and ${initialEdges.length} edges`);
+    setNodes(initialNodes);
+    setEdges(initialEdges);
+  }, [initialNodes, initialEdges, setNodes, setEdges]);
+
   // Update nodes when selection or pins change
   useEffect(() => {
     setNodes(nds => 
