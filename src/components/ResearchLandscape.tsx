@@ -267,9 +267,12 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
         );
         
         if (similarPapers.length > 0) {
-          const similarY = projectY + yOffset + 120;
-          const similarSpacing = 80;
-          const similarStartX = projectStartX + pIndex * projectSpacing - ((similarPapers.length - 1) * similarSpacing) / 2;
+          // Position similar papers directly below the parent paper
+          const parentX = projectStartX + pIndex * projectSpacing;
+          const parentY = projectY + yOffset;
+          const similarY = parentY + 150; // 150px below parent
+          const similarSpacing = 90;
+          const similarStartX = parentX - ((similarPapers.length - 1) * similarSpacing) / 2;
           
           similarPapers.forEach((similarPaper, sIndex) => {
             nodes.push({
@@ -292,7 +295,7 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
               id: `edge-similar-${similarPaper.id}`,
               source: `project-${project.id}`,
               target: `project-${similarPaper.id}`,
-              style: { stroke: 'hsl(150 60% 60%)', strokeWidth: 1.5, strokeDasharray: '5,5' },
+              style: { stroke: 'hsl(150 60% 60%)', strokeWidth: 2, strokeDasharray: '5,5' },
               animated: true,
             });
           });
@@ -306,10 +309,20 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
-  // Force update nodes and edges when data changes
+  // Force update nodes and edges when data changes (preserve positions)
   useEffect(() => {
     console.log(`Updating React Flow with ${initialNodes.length} nodes and ${initialEdges.length} edges`);
-    setNodes(initialNodes);
+    
+    // Preserve existing node positions when updating
+    setNodes(nds => {
+      const positionMap = new Map(nds.map(n => [n.id, n.position]));
+      
+      return initialNodes.map(node => ({
+        ...node,
+        position: positionMap.get(node.id) || node.position, // Use existing position if available
+      }));
+    });
+    
     setEdges(initialEdges);
   }, [initialNodes, initialEdges, setNodes, setEdges]);
 
