@@ -1,4 +1,8 @@
 export interface ProjectIntake {
+  // Backend IDs
+  projectId?: string;
+  researchMapId?: string;
+  
   // Step 1: Project Goal
   title: string;
   goal: string;

@@ -3,15 +3,10 @@ import ProjectIntakeWizard from "@/components/ProjectIntakeWizard";
 import WorkspaceLayout from "@/components/WorkspaceLayout";
 import { ProjectIntake } from "@/types/workspace";
 
-interface ExtendedIntake extends ProjectIntake {
-  projectId?: string;
-  researchMapId?: string;
-}
-
 const Index = () => {
-  const [intake, setIntake] = useState<ExtendedIntake | null>(null);
+  const [intake, setIntake] = useState<ProjectIntake | null>(null);
 
-  const handleIntakeComplete = useCallback((completedIntake: ExtendedIntake) => {
+  const handleIntakeComplete = useCallback((completedIntake: ProjectIntake) => {
     console.log("Intake completed with projectId:", completedIntake.projectId);
     setIntake(completedIntake);
   }, []);
@@ -20,7 +15,7 @@ const Index = () => {
     setIntake(null);
   }, []);
 
-  const handleUpdateIntake = useCallback((updatedIntake: ExtendedIntake) => {
+  const handleUpdateIntake = useCallback((updatedIntake: ProjectIntake) => {
     setIntake(updatedIntake);
   }, []);
 

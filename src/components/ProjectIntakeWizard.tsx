@@ -5,7 +5,7 @@ import { projectAPI, researchAPI } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
 interface ProjectIntakeWizardProps {
-  onComplete: (intake: ProjectIntake & { projectId?: string }) => void;
+  onComplete: (intake: ProjectIntake) => void;
 }
 
 const CAPABILITIES = [
