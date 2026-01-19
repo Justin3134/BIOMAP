@@ -53,6 +53,14 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
   useEffect(() => {
     if (!project) return;
     
+    console.log('📋 DetailPanel received project:', {
+      id: project.id,
+      title: project.title,
+      hasOverview: !!project.details.overview,
+      overviewLength: project.details.overview?.length || 0,
+      overviewPreview: project.details.overview?.substring(0, 100)
+    });
+    
     const fetchEvidence = async () => {
       // Check if we already have evidence in the project details
       if (project.details.whatWorked?.length > 0) {
@@ -65,10 +73,23 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
         return;
       }
 
+      // Check if we have an overview to extract from
+      if (!project.details.overview || project.details.overview === 'No abstract available') {
+        console.warn('⚠️ No overview available for evidence extraction');
+        setEvidence({
+          what_worked: ["No abstract available for analysis"],
+          limitations: ["No abstract available for analysis"],
+          key_lessons: ["No abstract available for analysis"],
+          practical_constraints: []
+        });
+        return;
+      }
+
       // Otherwise, extract evidence using OpenAI
       setIsLoadingEvidence(true);
       try {
         console.log(`🔍 Extracting evidence for: ${project.title}`);
+        console.log(`📄 Using overview (${project.details.overview.length} chars): ${project.details.overview.substring(0, 150)}...`);
         const extractedEvidence = await researchAPI.extractEvidence(
           project.id,
           project.title,
