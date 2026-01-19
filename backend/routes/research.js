@@ -150,11 +150,11 @@ router.post('/map/:projectId', async (req, res) => {
                         url: p.paperId ? `https://www.semanticscholar.org/paper/${p.paperId}` : null,
                         isAIGenerated: false
                     }));
-                    
+
                     // Debug: Check if abstracts are present
                     const papersWithAbstract = mappedPapers.filter(p => p.abstract && p.abstract.length > 0).length;
                     console.log(`📊 Cluster "${label}": ${mappedPapers.length} papers, ${papersWithAbstract} with abstracts`);
-                    
+
                     return {
                         branch_id: cluster.cluster_id,
                         label,
