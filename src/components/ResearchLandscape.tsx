@@ -260,6 +260,43 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
           target: `project-${project.id}`,
           style: { stroke: 'hsl(220 15% 80%)', strokeWidth: 1.5 },
         });
+
+        // Add similar papers below this project if they exist
+        const similarPapers = researchProjects.filter(p => 
+          p.cluster === `similar_${project.id}`
+        );
+        
+        if (similarPapers.length > 0) {
+          const similarY = projectY + yOffset + 120;
+          const similarSpacing = 80;
+          const similarStartX = projectStartX + pIndex * projectSpacing - ((similarPapers.length - 1) * similarSpacing) / 2;
+          
+          similarPapers.forEach((similarPaper, sIndex) => {
+            nodes.push({
+              id: `project-${similarPaper.id}`,
+              type: "projectNode",
+              position: { 
+                x: similarStartX + sIndex * similarSpacing, 
+                y: similarY 
+              },
+              data: {
+                project: similarPaper,
+                isSelected: selectedProject?.id === similarPaper.id,
+                onSelect: handleSelectProject,
+              },
+              draggable: true,
+            });
+
+            // Edge from parent project to similar paper (dashed green line)
+            edges.push({
+              id: `edge-similar-${similarPaper.id}`,
+              source: `project-${project.id}`,
+              target: `project-${similarPaper.id}`,
+              style: { stroke: 'hsl(150 60% 60%)', strokeWidth: 1.5, strokeDasharray: '5,5' },
+              animated: true,
+            });
+          });
+        }
       });
     });
 
