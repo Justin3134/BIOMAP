@@ -20,20 +20,22 @@ import {
     clusterByApproach
 } from '../services/openaiResearch.js';
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY
+});
 
 const router = express.Router();
 
 // Helper function to generate abstracts for papers missing them
 async function fillMissingAbstracts(papers) {
     const papersNeedingAbstracts = papers.filter(p => !p.abstract || p.abstract.trim() === '');
-    
+
     if (papersNeedingAbstracts.length === 0) {
         return papers;
     }
-    
+
     console.log(`📝 Generating abstracts for ${papersNeedingAbstracts.length} papers using AI...`);
-    
+
     // Generate abstracts in batches to avoid rate limits
     for (const paper of papersNeedingAbstracts) {
         try {
@@ -48,11 +50,14 @@ Write ONLY the abstract, nothing else.`;
 
             const response = await openai.chat.completions.create({
                 model: 'gpt-4o-mini',
-                messages: [{role: 'user', content: prompt}],
+                messages: [{
+                    role: 'user',
+                    content: prompt
+                }],
                 temperature: 0.7,
                 max_tokens: 150
             });
-            
+
             paper.abstract = response.choices[0].message.content.trim();
             console.log(`  ✅ Generated abstract for: ${paper.title.substring(0, 50)}...`);
         } catch (error) {
@@ -61,7 +66,7 @@ Write ONLY the abstract, nothing else.`;
             paper.abstract = `This research paper explores ${paper.title.toLowerCase()}. Published in ${paper.year}, this work contributes to understanding in this field.`;
         }
     }
-    
+
     return papers;
 }
 
