@@ -101,6 +101,7 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
     
     try {
       console.log(`🔍 Finding similar papers to: ${project.title}`);
+      console.log(`📄 Abstract: ${project.details.overview?.substring(0, 100)}...`);
       
       // Use OpenAI to generate similar paper suggestions based on the current paper
       const response = await fetch('http://localhost:3001/api/research/similar', {
@@ -109,22 +110,36 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
         body: JSON.stringify({
           paperId: project.id,
           title: project.title,
-          abstract: project.details.overview,
-          count: 3 // Reduced to 3 for better visualization
+          abstract: project.details.overview || project.summary,
+          count: 3
         })
       });
       
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+      
       const data = await response.json();
+      console.log('📦 API response:', data);
+      
       const papers = data.similarPapers || [];
       
-      console.log(`✅ Found ${papers.length} similar papers, adding to map...`);
+      console.log(`✅ Found ${papers.length} similar papers`);
+      
+      if (papers.length === 0) {
+        console.warn('⚠️ No similar papers returned from API');
+        return;
+      }
       
       // Pass similar papers back to ResearchLandscape to add as nodes
-      if (onAddSimilarPapers && papers.length > 0) {
+      if (onAddSimilarPapers) {
+        console.log(`📍 Adding ${papers.length} papers to map...`);
         onAddSimilarPapers(project, papers);
+      } else {
+        console.error('❌ onAddSimilarPapers callback not provided');
       }
     } catch (error) {
-      console.error("Error finding similar papers:", error);
+      console.error("❌ Error finding similar papers:", error);
     } finally {
       setIsLoadingSimilar(false);
     }
