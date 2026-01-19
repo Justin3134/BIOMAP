@@ -365,6 +365,7 @@ const WorkspaceLayout = ({ intake, onReset, onUpdateIntake }: WorkspaceLayoutPro
 
         {/* Chat Sidebar - only on map view */}
         <ChatSidebar
+          projectId={intake.projectId}
           contextProjects={chatContext}
           onRemoveContext={handleRemoveFromContext}
         />

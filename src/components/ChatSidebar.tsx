@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { ResearchProject } from "@/types/research";
 import { Send, X, Sparkles, MessageSquare, PanelRightClose, PanelRightOpen } from "lucide-react";
+import { chatAPI } from "@/lib/api";
 
 interface ChatMessage {
   id: string;
@@ -10,6 +11,7 @@ interface ChatMessage {
 }
 
 interface ChatSidebarProps {
+  projectId?: string; // Added projectId
   contextProjects: ResearchProject[];
   onRemoveContext: (projectId: string) => void;
   onAskAboutText?: (text: string) => void;
@@ -24,7 +26,7 @@ const SMART_PROMPTS = [
   { label: "2-week plan", prompt: "If I only have 2 weeks, what changes?" },
 ];
 
-const ChatSidebar = ({ contextProjects, onRemoveContext, onAskAboutText }: ChatSidebarProps) => {
+const ChatSidebar = ({ projectId, contextProjects, onRemoveContext, onAskAboutText }: ChatSidebarProps) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -107,6 +109,11 @@ const ChatSidebar = ({ contextProjects, onRemoveContext, onAskAboutText }: ChatS
     const messageToSend = message || input.trim();
     if (!messageToSend) return;
 
+    if (!projectId) {
+      console.error("No projectId provided to ChatSidebar");
+      return;
+    }
+
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       role: "user",
@@ -117,10 +124,33 @@ const ChatSidebar = ({ contextProjects, onRemoveContext, onAskAboutText }: ChatS
     setInput("");
     setIsTyping(true);
 
-    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
-
-    const aiResponse = generateMockResponse(messageToSend);
-    setMessages(prev => [...prev, aiResponse]);
+    try {
+      // Get selected paper IDs from context
+      const selectedPaperIds = contextProjects.map(p => p.id);
+      
+      console.log(`💬 Sending message to AI with ${selectedPaperIds.length} papers in context`);
+      
+      // Call real API
+      const result = await chatAPI.send(projectId, messageToSend, selectedPaperIds);
+      
+      const aiResponse: ChatMessage = {
+        id: Date.now().toString(),
+        role: "assistant",
+        content: result.response,
+        basedOn: contextProjects.map(p => p.title),
+      };
+      
+      setMessages(prev => [...prev, aiResponse]);
+      console.log(`✅ AI response received (used ${result.contextUsed.papers} papers, ${result.contextUsed.notes} notes)`);
+      
+    } catch (error) {
+      console.error("Error sending chat message:", error);
+      
+      // Fallback to mock response if API fails
+      const aiResponse = generateMockResponse(messageToSend);
+      setMessages(prev => [...prev, aiResponse]);
+    }
+    
     setIsTyping(false);
   };
 
