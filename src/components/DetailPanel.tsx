@@ -1,6 +1,7 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { ResearchProject } from "@/types/research";
-import { X, ExternalLink, CheckCircle, XCircle, Lightbulb, Link2, MessageSquare, Pin } from "lucide-react";
+import { X, ExternalLink, CheckCircle, XCircle, Lightbulb, Link2, MessageSquare, Pin, Loader2 } from "lucide-react";
+import { researchAPI } from "@/lib/api";
 
 interface DetailPanelProps {
   project: ResearchProject | null;
@@ -16,6 +17,8 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
   const [selectedText, setSelectedText] = useState<string>("");
   const [showAskButton, setShowAskButton] = useState(false);
   const [askButtonPosition, setAskButtonPosition] = useState({ x: 0, y: 0 });
+  const [evidence, setEvidence] = useState<any>(null);
+  const [isLoadingEvidence, setIsLoadingEvidence] = useState(false);
 
   const handleTextSelection = useCallback(() => {
     const selection = window.getSelection();
@@ -43,6 +46,50 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
       window.getSelection()?.removeAllRanges();
     }
   };
+
+  // Fetch evidence when project changes
+  useEffect(() => {
+    if (!project) return;
+    
+    const fetchEvidence = async () => {
+      // Check if we already have evidence in the project details
+      if (project.details.whatWorked?.length > 0) {
+        setEvidence({
+          what_worked: project.details.whatWorked,
+          limitations: project.details.whatDidntWork,
+          key_lessons: project.details.keyLessons,
+          practical_constraints: []
+        });
+        return;
+      }
+
+      // Otherwise, extract evidence using OpenAI
+      setIsLoadingEvidence(true);
+      try {
+        console.log(`🔍 Extracting evidence for: ${project.title}`);
+        const extractedEvidence = await researchAPI.extractEvidence(
+          project.id,
+          project.title,
+          project.details.overview
+        );
+        setEvidence(extractedEvidence);
+        console.log(`✅ Evidence extracted successfully`);
+      } catch (error) {
+        console.error("Error extracting evidence:", error);
+        // Fallback to empty arrays if extraction fails
+        setEvidence({
+          what_worked: ["Evidence extraction unavailable"],
+          limitations: ["Evidence extraction unavailable"],
+          key_lessons: ["Evidence extraction unavailable"],
+          practical_constraints: []
+        });
+      } finally {
+        setIsLoadingEvidence(false);
+      }
+    };
+
+    fetchEvidence();
+  }, [project?.id]);
 
   if (!project) return null;
 
@@ -152,14 +199,21 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
             <CheckCircle className="w-4 h-4 text-primary" />
             <h3 className="font-serif font-semibold text-foreground">What Worked</h3>
           </div>
-          <ul className="space-y-1.5">
-            {project.details.whatWorked.map((item, i) => (
-              <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
-                <span className="w-1 h-1 rounded-full bg-primary mt-2 shrink-0" />
-                {item}
-              </li>
-            ))}
-          </ul>
+          {isLoadingEvidence ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Extracting evidence...
+            </div>
+          ) : (
+            <ul className="space-y-1.5">
+              {(evidence?.what_worked || []).map((item: string, i: number) => (
+                <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
+                  <span className="w-1 h-1 rounded-full bg-primary mt-2 shrink-0" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
 
         {/* What Didn't Work */}
@@ -168,14 +222,21 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
             <XCircle className="w-4 h-4 text-destructive" />
             <h3 className="font-serif font-semibold text-foreground">What Didn't Work</h3>
           </div>
-          <ul className="space-y-1.5">
-            {project.details.whatDidntWork.map((item, i) => (
-              <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
-                <span className="w-1 h-1 rounded-full bg-destructive mt-2 shrink-0" />
-                {item}
-              </li>
-            ))}
-          </ul>
+          {isLoadingEvidence ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Extracting evidence...
+            </div>
+          ) : (
+            <ul className="space-y-1.5">
+              {(evidence?.limitations || []).map((item: string, i: number) => (
+                <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
+                  <span className="w-1 h-1 rounded-full bg-destructive mt-2 shrink-0" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
 
         {/* Key Lessons */}
@@ -184,14 +245,21 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
             <Lightbulb className="w-4 h-4 text-accent" />
             <h3 className="font-serif font-semibold text-foreground">Key Lessons</h3>
           </div>
-          <ul className="space-y-1.5">
-            {project.details.keyLessons.map((item, i) => (
-              <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
-                <span className="w-1 h-1 rounded-full bg-accent mt-2 shrink-0" />
-                {item}
-              </li>
-            ))}
-          </ul>
+          {isLoadingEvidence ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Extracting evidence...
+            </div>
+          ) : (
+            <ul className="space-y-1.5">
+              {(evidence?.key_lessons || []).map((item: string, i: number) => (
+                <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
+                  <span className="w-1 h-1 rounded-full bg-accent mt-2 shrink-0" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
 
         {/* Relation to Your Idea */}
