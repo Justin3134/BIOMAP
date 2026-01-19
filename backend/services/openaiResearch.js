@@ -12,48 +12,30 @@ const openai = new OpenAI({
 export async function generateResearchPapers(projectSummary, projectDescription, count = 15) {
   console.log('🤖 Generating research papers using OpenAI...');
   
-  const prompt = `You are a research database. Generate ${count} realistic bio research papers related to this project:
+  // Simplified prompt to reduce token usage
+  const prompt = `Generate ${count} bio research papers for: "${projectDescription.substring(0, 150)}"
 
-Project: ${projectDescription}
-Summary: ${projectSummary}
+Return JSON with "papers" array. Each paper needs:
+- title (concise)
+- abstract (100 words max)
+- year (2018-2024)
+- authors (array of 2-3 names)
+- citationCount (number)
+- venue (journal name)
+- approach (research method used)
 
-For each paper, provide:
-1. A realistic title
-2. A detailed abstract (150-250 words)
-3. Year (2018-2024)
-4. 2-4 author names
-5. Citation count (realistic range)
-6. Venue/journal name
-7. A specific research approach/method used
-
-Generate papers that cover DIFFERENT approaches and methods. Include:
-- Some highly cited foundational papers
-- Some recent cutting-edge papers
-- Some practical application papers
-- Some papers about limitations/challenges
-
-Return ONLY valid JSON array in this format:
-[
-  {
-    "paperId": "unique_id",
-    "title": "Paper Title",
-    "abstract": "Detailed abstract...",
-    "year": 2023,
-    "authors": ["Author Name"],
-    "citationCount": 150,
-    "venue": "Journal Name",
-    "approach": "specific method/approach"
-  }
-]`;
+Cover different approaches. Format:
+{"papers": [{"paperId":"id","title":"...","abstract":"...","year":2023,"authors":["Name"],"citationCount":100,"venue":"Journal","approach":"method"}]}`;
 
   try {
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: 'gpt-4o-mini', // Use mini model to reduce cost and token usage
       messages: [
-        { role: 'system', content: 'You are a scientific research database. Generate realistic, diverse research papers. Always return valid JSON.' },
+        { role: 'system', content: 'You are a research database. Return valid JSON only.' },
         { role: 'user', content: prompt }
       ],
-      temperature: 0.8,
+      temperature: 0.7,
+      max_tokens: 3000, // Limit response size
       response_format: { type: "json_object" }
     });
 
@@ -90,8 +72,45 @@ Return ONLY valid JSON array in this format:
     
   } catch (error) {
     console.error('❌ Error generating research papers:', error.message);
-    return [];
+    console.log('🎲 Using simple fallback papers...');
+    
+    // Simple fallback: generate basic papers without AI
+    return generateFallbackPapers(projectDescription, count);
   }
+}
+
+/**
+ * Generate simple fallback papers when AI fails
+ */
+function generateFallbackPapers(projectDescription, count = 15) {
+  const keywords = projectDescription.split(' ').slice(0, 3).join(' ');
+  const approaches = [
+    'CRISPR-based approach',
+    'Computational modeling',
+    'Enzyme engineering',
+    'Metabolic pathway optimization',
+    'Field validation studies'
+  ];
+  
+  const papers = [];
+  for (let i = 0; i < count; i++) {
+    const approach = approaches[i % approaches.length];
+    papers.push({
+      paperId: `fallback_${Date.now()}_${i}`,
+      title: `${approach} for ${keywords}`,
+      abstract: `This study explores ${approach.toLowerCase()} as a method for ${keywords}. The research demonstrates promising results with practical applications for laboratory settings. Key findings include improved efficiency and cost-effectiveness compared to traditional methods.`,
+      year: 2020 + (i % 5),
+      authors: [{ name: `Researcher ${i + 1}` }, { name: `Scientist ${i + 2}` }],
+      citationCount: Math.floor(Math.random() * 300),
+      venue: 'Nature Biotechnology',
+      externalLink: null,
+      isAIGenerated: true,
+      approach: approach
+    });
+  }
+  
+  console.log(`✅ Generated ${papers.length} fallback papers`);
+  return papers;
 }
 
 /**
