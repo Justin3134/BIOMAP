@@ -250,4 +250,85 @@ router.post('/evidence', async (req, res) => {
     }
 });
 
+/**
+ * POST /api/research/similar
+ * Find similar papers using OpenAI
+ */
+router.post('/similar', async (req, res) => {
+    try {
+        const { paperId, title, abstract, count = 5 } = req.body;
+
+        if (!title || !abstract) {
+            return res.status(400).json({ error: 'title and abstract are required' });
+        }
+
+        console.log(`🔍 Finding similar papers to: ${title}`);
+
+        // Use OpenAI to generate similar paper suggestions
+        const { default: OpenAI } = await import('openai');
+        const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+        const prompt = `Based on this research paper, suggest ${count} similar real research papers in the same field:
+
+Title: ${title}
+Abstract: ${abstract.substring(0, 500)}
+
+Generate ${count} realistic similar papers with:
+- Different but related titles
+- Similar methodology or research area
+- Realistic author names
+- Years between 2018-2024
+- Brief abstracts (100 words)
+
+Return ONLY valid JSON array:
+[{"title":"...","abstract":"...","year":2023,"authors":"Name1, Name2","approach":"method"}]`;
+
+        const response = await openai.chat.completions.create({
+            model: 'gpt-4o-mini',
+            messages: [
+                { role: 'system', content: 'You are a research database. Generate realistic similar papers. Return valid JSON only.' },
+                { role: 'user', content: prompt }
+            ],
+            temperature: 0.8,
+            max_tokens: 2000,
+            response_format: { type: "json_object" }
+        });
+
+        const content = response.choices[0].message.content;
+        const parsed = JSON.parse(content);
+        const papers = parsed.papers || parsed.results || parsed;
+
+        if (!Array.isArray(papers)) {
+            console.error('❌ OpenAI did not return an array');
+            return res.json({ similarPapers: [] });
+        }
+
+        // Transform to consistent format
+        const similarPapers = papers.map((p, idx) => ({
+            paperId: `similar_${Date.now()}_${idx}`,
+            title: p.title,
+            abstract: p.abstract,
+            year: p.year || 2023,
+            authors: typeof p.authors === 'string' ? p.authors : p.authors?.join(', ') || 'Unknown',
+            url: null,
+            isAIGenerated: true
+        }));
+
+        console.log(`✅ Generated ${similarPapers.length} similar papers`);
+
+        res.json({ 
+            success: true,
+            similarPapers,
+            basedOn: title
+        });
+
+    } catch (error) {
+        console.error('Error finding similar papers:', error);
+        res.status(500).json({ 
+            error: error.message,
+            similarPapers: []
+        });
+    }
+});
+
 export default router;

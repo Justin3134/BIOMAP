@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { ResearchProject } from "@/types/research";
-import { X, ExternalLink, CheckCircle, XCircle, Lightbulb, Link2, MessageSquare, Pin, Loader2 } from "lucide-react";
+import { X, ExternalLink, CheckCircle, XCircle, Lightbulb, Link2, MessageSquare, Pin, Loader2, Plus, ChevronDown, ChevronUp } from "lucide-react";
 import { researchAPI } from "@/lib/api";
 
 interface DetailPanelProps {
@@ -19,6 +19,9 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
   const [askButtonPosition, setAskButtonPosition] = useState({ x: 0, y: 0 });
   const [evidence, setEvidence] = useState<any>(null);
   const [isLoadingEvidence, setIsLoadingEvidence] = useState(false);
+  const [similarPapers, setSimilarPapers] = useState<any[]>([]);
+  const [isLoadingSimilar, setIsLoadingSimilar] = useState(false);
+  const [showSimilarPapers, setShowSimilarPapers] = useState(false);
 
   const handleTextSelection = useCallback(() => {
     const selection = window.getSelection();
@@ -90,6 +93,39 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
 
     fetchEvidence();
   }, [project?.id]);
+
+  // Find similar papers using OpenAI
+  const handleFindSimilar = async () => {
+    if (!project || isLoadingSimilar) return;
+    
+    setIsLoadingSimilar(true);
+    setShowSimilarPapers(true);
+    
+    try {
+      console.log(`🔍 Finding similar papers to: ${project.title}`);
+      
+      // Use OpenAI to generate similar paper suggestions based on the current paper
+      const response = await fetch('http://localhost:3001/api/research/similar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paperId: project.id,
+          title: project.title,
+          abstract: project.details.overview,
+          count: 5
+        })
+      });
+      
+      const data = await response.json();
+      setSimilarPapers(data.similarPapers || []);
+      console.log(`✅ Found ${data.similarPapers?.length || 0} similar papers`);
+    } catch (error) {
+      console.error("Error finding similar papers:", error);
+      setSimilarPapers([]);
+    } finally {
+      setIsLoadingSimilar(false);
+    }
+  };
 
   if (!project) return null;
 
@@ -284,6 +320,72 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
             <ExternalLink className="w-4 h-4" />
             View original paper
           </a>
+        )}
+
+        {/* Find Similar Papers Button */}
+        <div className="pt-4 border-t border-border">
+          <button
+            onClick={handleFindSimilar}
+            disabled={isLoadingSimilar}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-secondary hover:bg-secondary/80 text-foreground rounded-lg transition-colors disabled:opacity-50"
+          >
+            {isLoadingSimilar ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Finding similar papers...
+              </>
+            ) : (
+              <>
+                <Plus className="w-4 h-4" />
+                Find Similar Research
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Similar Papers Section */}
+        {showSimilarPapers && similarPapers.length > 0 && (
+          <div className="mt-4 pt-4 border-t border-border">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-serif font-semibold text-foreground">Similar Research</h3>
+              <button
+                onClick={() => setShowSimilarPapers(false)}
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
+                <ChevronUp className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="space-y-3">
+              {similarPapers.map((paper, index) => (
+                <div
+                  key={index}
+                  className="p-3 bg-secondary/50 rounded-lg hover:bg-secondary transition-colors cursor-pointer"
+                >
+                  <h4 className="text-sm font-medium text-foreground mb-1">
+                    {paper.title}
+                  </h4>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    {paper.year} • {paper.authors}
+                  </p>
+                  <p className="text-xs text-muted-foreground line-clamp-2">
+                    {paper.abstract}
+                  </p>
+                  {paper.url && (
+                    <a
+                      href={paper.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-2"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                      View paper
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
         )}
       </div>
     </div>
