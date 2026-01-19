@@ -11,17 +11,16 @@ interface DetailPanelProps {
   isInContext?: boolean;
   onPinEvidence?: (project: ResearchProject) => void;
   isPinnedEvidence?: boolean;
+  onAddSimilarPapers?: (parentProject: ResearchProject, similarPapers: any[]) => void;
 }
 
-const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInContext, onPinEvidence, isPinnedEvidence }: DetailPanelProps) => {
+const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInContext, onPinEvidence, isPinnedEvidence, onAddSimilarPapers }: DetailPanelProps) => {
   const [selectedText, setSelectedText] = useState<string>("");
   const [showAskButton, setShowAskButton] = useState(false);
   const [askButtonPosition, setAskButtonPosition] = useState({ x: 0, y: 0 });
   const [evidence, setEvidence] = useState<any>(null);
   const [isLoadingEvidence, setIsLoadingEvidence] = useState(false);
-  const [similarPapers, setSimilarPapers] = useState<any[]>([]);
   const [isLoadingSimilar, setIsLoadingSimilar] = useState(false);
-  const [showSimilarPapers, setShowSimilarPapers] = useState(false);
 
   const handleTextSelection = useCallback(() => {
     const selection = window.getSelection();
@@ -99,7 +98,6 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
     if (!project || isLoadingSimilar) return;
     
     setIsLoadingSimilar(true);
-    setShowSimilarPapers(true);
     
     try {
       console.log(`🔍 Finding similar papers to: ${project.title}`);
@@ -112,16 +110,21 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
           paperId: project.id,
           title: project.title,
           abstract: project.details.overview,
-          count: 5
+          count: 3 // Reduced to 3 for better visualization
         })
       });
       
       const data = await response.json();
-      setSimilarPapers(data.similarPapers || []);
-      console.log(`✅ Found ${data.similarPapers?.length || 0} similar papers`);
+      const papers = data.similarPapers || [];
+      
+      console.log(`✅ Found ${papers.length} similar papers, adding to map...`);
+      
+      // Pass similar papers back to ResearchLandscape to add as nodes
+      if (onAddSimilarPapers && papers.length > 0) {
+        onAddSimilarPapers(project, papers);
+      }
     } catch (error) {
       console.error("Error finding similar papers:", error);
-      setSimilarPapers([]);
     } finally {
       setIsLoadingSimilar(false);
     }
@@ -327,66 +330,24 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
           <button
             onClick={handleFindSimilar}
             disabled={isLoadingSimilar}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-secondary hover:bg-secondary/80 text-foreground rounded-lg transition-colors disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-lg transition-colors disabled:opacity-50"
           >
             {isLoadingSimilar ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                Finding similar papers...
+                Adding similar papers to map...
               </>
             ) : (
               <>
                 <Plus className="w-4 h-4" />
-                Find Similar Research
+                Find Similar Papers
               </>
             )}
           </button>
+          <p className="text-xs text-muted-foreground text-center mt-2">
+            Adds 3 similar papers as nodes below this one
+          </p>
         </div>
-
-        {/* Similar Papers Section */}
-        {showSimilarPapers && similarPapers.length > 0 && (
-          <div className="mt-4 pt-4 border-t border-border">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-serif font-semibold text-foreground">Similar Research</h3>
-              <button
-                onClick={() => setShowSimilarPapers(false)}
-                className="text-xs text-muted-foreground hover:text-foreground"
-              >
-                <ChevronUp className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="space-y-3">
-              {similarPapers.map((paper, index) => (
-                <div
-                  key={index}
-                  className="p-3 bg-secondary/50 rounded-lg hover:bg-secondary transition-colors cursor-pointer"
-                >
-                  <h4 className="text-sm font-medium text-foreground mb-1">
-                    {paper.title}
-                  </h4>
-                  <p className="text-xs text-muted-foreground mb-2">
-                    {paper.year} • {paper.authors}
-                  </p>
-                  <p className="text-xs text-muted-foreground line-clamp-2">
-                    {paper.abstract}
-                  </p>
-                  {paper.url && (
-                    <a
-                      href={paper.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-2"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <ExternalLink className="w-3 h-3" />
-                      View paper
-                    </a>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

@@ -147,6 +147,46 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
     console.log("Ask about:", text, "from project:", project.title);
   }, [onAddToContext, chatContext]);
 
+  // Handle adding similar papers as nodes below a paper
+  const handleAddSimilarPapers = useCallback((parentProject: ResearchProject, similarPapers: any[]) => {
+    console.log(`📍 Adding ${similarPapers.length} similar papers below ${parentProject.title}`);
+    
+    // Transform similar papers to ResearchProject format
+    const newProjects: ResearchProject[] = similarPapers.map((paper, idx) => ({
+      id: paper.paperId,
+      title: paper.title,
+      year: paper.year,
+      authors: paper.authors,
+      similarity: 0.7 + Math.random() * 0.2, // Simulated similarity
+      novelty: "medium",
+      feasibility: "medium",
+      cluster: `similar_${parentProject.id}`,
+      clusterLabel: `Similar to ${parentProject.title.substring(0, 30)}...`,
+      tags: ["AI-generated", "Similar"],
+      summary: paper.abstract,
+      similarityReasons: [`Similar to ${parentProject.title}`],
+      details: {
+        overview: paper.abstract || "No abstract available",
+        whatWorked: [],
+        whatDidntWork: [],
+        keyLessons: [],
+        relationToIdea: `This paper is similar to ${parentProject.title}`,
+        externalLink: paper.url,
+        year: paper.year,
+        authors: paper.authors?.split(', ') || [],
+        approach: "Similar research",
+        difficulty: "Medium",
+        cost: "Medium",
+        timeframe: "6-12 months"
+      }
+    }));
+
+    // Add to research projects
+    setResearchProjects(prev => [...prev, ...newProjects]);
+    
+    console.log(`✅ Added ${newProjects.length} similar paper nodes`);
+  }, []);
+
   // Build nodes and edges
   const { initialNodes, initialEdges } = useMemo(() => {
     const nodes: Node[] = [];
@@ -342,6 +382,7 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
           isInContext={chatContext.some(p => p.id === selectedProject.id)}
           onPinEvidence={onPinEvidence}
           isPinnedEvidence={pinnedEvidenceIds.includes(selectedProject.id)}
+          onAddSimilarPapers={handleAddSimilarPapers}
         />
       )}
 
