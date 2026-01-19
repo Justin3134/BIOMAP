@@ -1,4 +1,5 @@
 import express from 'express';
+import OpenAI from 'openai';
 import {
     projectsDB,
     researchDB
@@ -19,7 +20,50 @@ import {
     clusterByApproach
 } from '../services/openaiResearch.js';
 
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
 const router = express.Router();
+
+// Helper function to generate abstracts for papers missing them
+async function fillMissingAbstracts(papers) {
+    const papersNeedingAbstracts = papers.filter(p => !p.abstract || p.abstract.trim() === '');
+    
+    if (papersNeedingAbstracts.length === 0) {
+        return papers;
+    }
+    
+    console.log(`📝 Generating abstracts for ${papersNeedingAbstracts.length} papers using AI...`);
+    
+    // Generate abstracts in batches to avoid rate limits
+    for (const paper of papersNeedingAbstracts) {
+        try {
+            const prompt = `Based on this research paper title and metadata, write a concise 2-3 sentence abstract that describes what the paper likely covers:
+
+Title: ${paper.title}
+Year: ${paper.year}
+Authors: ${paper.authors?.slice(0, 3).map(a => a.name).join(', ') || 'Unknown'}
+Venue: ${paper.venue || 'Unknown'}
+
+Write ONLY the abstract, nothing else.`;
+
+            const response = await openai.chat.completions.create({
+                model: 'gpt-4o-mini',
+                messages: [{role: 'user', content: prompt}],
+                temperature: 0.7,
+                max_tokens: 150
+            });
+            
+            paper.abstract = response.choices[0].message.content.trim();
+            console.log(`  ✅ Generated abstract for: ${paper.title.substring(0, 50)}...`);
+        } catch (error) {
+            console.error(`  ❌ Failed to generate abstract for ${paper.title}:`, error.message);
+            // Fallback to title-based summary
+            paper.abstract = `This research paper explores ${paper.title.toLowerCase()}. Published in ${paper.year}, this work contributes to understanding in this field.`;
+        }
+    }
+    
+    return papers;
+}
 
 /**
  * POST /api/research/map/:projectId
@@ -83,6 +127,11 @@ router.post('/map/:projectId', async (req, res) => {
         }
 
         console.log(`✅ Found ${papers.length} papers (${useAIGenerated ? 'AI-generated' : 'from Semantic Scholar'})`);
+
+        // Fill missing abstracts for Semantic Scholar papers
+        if (!useAIGenerated) {
+            papers = await fillMissingAbstracts(papers);
+        }
 
         let labeledClusters;
 
