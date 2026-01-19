@@ -100,41 +100,53 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
     setIsLoadingSimilar(true);
     
     try {
+      // Get abstract - try multiple sources
+      const abstract = project.details.overview || project.summary || project.title;
+      
       console.log(`🔍 Finding similar papers to: ${project.title}`);
-      console.log(`📄 Abstract: ${project.details.overview?.substring(0, 100)}...`);
+      console.log(`📄 Using abstract (${abstract.length} chars): ${abstract.substring(0, 150)}...`);
+      
+      const requestBody = {
+        paperId: project.id,
+        title: project.title,
+        abstract: abstract,
+        count: 3
+      };
+      
+      console.log('📤 Sending request:', requestBody);
       
       // Use OpenAI to generate similar paper suggestions based on the current paper
       const response = await fetch('http://localhost:3001/api/research/similar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          paperId: project.id,
-          title: project.title,
-          abstract: project.details.overview || project.summary,
-          count: 3
-        })
+        body: JSON.stringify(requestBody)
       });
       
+      console.log(`📥 Response status: ${response.status}`);
+      
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ API error response:', errorText);
         throw new Error(`API error: ${response.status}`);
       }
       
       const data = await response.json();
-      console.log('📦 API response:', data);
+      console.log('📦 Full API response:', data);
       
       const papers = data.similarPapers || [];
       
       console.log(`✅ Found ${papers.length} similar papers`);
       
       if (papers.length === 0) {
-        console.warn('⚠️ No similar papers returned from API');
+        console.warn('⚠️ No similar papers returned from API - response was:', data);
         return;
       }
       
       // Pass similar papers back to ResearchLandscape to add as nodes
       if (onAddSimilarPapers) {
-        console.log(`📍 Adding ${papers.length} papers to map...`);
+        console.log(`📍 Calling onAddSimilarPapers with ${papers.length} papers...`);
         onAddSimilarPapers(project, papers);
+        console.log('✅ Similar papers added to map!');
       } else {
         console.error('❌ onAddSimilarPapers callback not provided');
       }
