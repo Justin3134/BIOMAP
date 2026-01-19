@@ -256,17 +256,28 @@ router.post('/evidence', async (req, res) => {
  */
 router.post('/similar', async (req, res) => {
     try {
-        const { paperId, title, abstract, count = 5 } = req.body;
+        const {
+            paperId,
+            title,
+            abstract,
+            count = 5
+        } = req.body;
 
         if (!title || !abstract) {
-            return res.status(400).json({ error: 'title and abstract are required' });
+            return res.status(400).json({
+                error: 'title and abstract are required'
+            });
         }
 
         console.log(`🔍 Finding similar papers to: ${title}`);
 
         // Use OpenAI to generate similar paper suggestions
-        const { default: OpenAI } = await import('openai');
-        const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+        const {
+            default: OpenAI
+        } = await import('openai');
+        const openai = new OpenAI({
+            apiKey: process.env.OPENAI_API_KEY
+        });
 
         const prompt = `Based on this research paper, suggest ${count} similar real research papers in the same field:
 
@@ -285,13 +296,20 @@ Return ONLY valid JSON array:
 
         const response = await openai.chat.completions.create({
             model: 'gpt-4o-mini',
-            messages: [
-                { role: 'system', content: 'You are a research database. Generate realistic similar papers. Return valid JSON only.' },
-                { role: 'user', content: prompt }
+            messages: [{
+                    role: 'system',
+                    content: 'You are a research database. Generate realistic similar papers. Return valid JSON only.'
+                },
+                {
+                    role: 'user',
+                    content: prompt
+                }
             ],
             temperature: 0.8,
             max_tokens: 2000,
-            response_format: { type: "json_object" }
+            response_format: {
+                type: "json_object"
+            }
         });
 
         const content = response.choices[0].message.content;
@@ -300,7 +318,9 @@ Return ONLY valid JSON array:
 
         if (!Array.isArray(papers)) {
             console.error('❌ OpenAI did not return an array');
-            return res.json({ similarPapers: [] });
+            return res.json({
+                similarPapers: []
+            });
         }
 
         // Transform to consistent format
@@ -316,7 +336,7 @@ Return ONLY valid JSON array:
 
         console.log(`✅ Generated ${similarPapers.length} similar papers`);
 
-        res.json({ 
+        res.json({
             success: true,
             similarPapers,
             basedOn: title
@@ -324,7 +344,7 @@ Return ONLY valid JSON array:
 
     } catch (error) {
         console.error('Error finding similar papers:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             error: error.message,
             similarPapers: []
         });
