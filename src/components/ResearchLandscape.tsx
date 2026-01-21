@@ -16,15 +16,18 @@ import "@xyflow/react/dist/style.css";
 import UserNode from "./nodes/UserNode";
 import ClusterNode from "./nodes/ClusterNode";
 import ProjectNode from "./nodes/ProjectNode";
+import NewsNode from "./nodes/NewsNode";
 import DetailPanel from "./DetailPanel";
+import NewsDetailPanel from "./NewsDetailPanel";
 import InsightPanel from "./InsightPanel";
 import NoveltyRadar from "./NoveltyRadar";
 import FeasibilityPanel from "./FeasibilityPanel";
 import { mockProjects, clusters } from "@/data/mockResearch";
 import { ResearchProject } from "@/types/research";
 import { ProjectIntake } from "@/types/workspace";
-import { ArrowLeft, Loader2 } from "lucide-react";
-import { researchAPI } from "@/lib/api";
+import { ArrowLeft, Loader2, BookOpen, Newspaper } from "lucide-react";
+import { researchAPI, newsAPI } from "@/lib/api";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface ResearchLandscapeProps {
   userQuery: string;
@@ -41,7 +44,10 @@ const nodeTypes = {
   userNode: UserNode,
   clusterNode: ClusterNode,
   projectNode: ProjectNode,
+  newsNode: NewsNode,
 };
+
+type ViewMode = 'scholars' | 'news';
 
 const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEvidenceIds = [], hideChatSidebar, chatContext = [], onAddToContext }: ResearchLandscapeProps) => {
   const [selectedProject, setSelectedProject] = useState<ResearchProject | null>(null);
@@ -51,8 +57,15 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
+  // View mode state
+  const [viewMode, setViewMode] = useState<ViewMode>('scholars');
+  const [newsCategories, setNewsCategories] = useState<any[]>([]);
+  const [newsArticles, setNewsArticles] = useState<any[]>([]);
+  const [isLoadingNews, setIsLoadingNews] = useState(false);
+  const [selectedArticle, setSelectedArticle] = useState<any | null>(null);
+  
   // Store node positions and similar papers in localStorage to persist across tab changes
-  const storageKey = `biomap-positions-${intake?.projectId || 'default'}`;
+  const storageKey = `biomap-positions-${intake?.projectId || 'default'}-${viewMode}`;
   const similarPapersKey = `biomap-similar-${intake?.projectId || 'default'}`;
   const savedPositionsRef = useRef<Map<string, { x: number; y: number }>>(new Map());
 
@@ -103,11 +116,8 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
               url: paper.url, // Add URL at top level (from backend)
               isAIGenerated: paper.isAIGenerated, // Add isAIGenerated flag (from backend)
               similarity: paper.similarity,
-              novelty: paper.similarity > 0.8 ? "high" : paper.similarity > 0.6 ? "medium" : "low",
-              feasibility: "medium",
               cluster: cluster.branch_id,
               clusterLabel: cluster.label,
-              tags: [],
               summary: paper.abstract?.substring(0, 200) + '...' || paper.title,
               similarityReasons: [`${Math.round(paper.similarity * 100)}% semantic similarity to your research goal`],
               details: {
@@ -158,6 +168,73 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
     fetchResearchMap();
   }, [intake?.projectId, similarPapersKey]);
 
+  // Fetch news map when in news mode
+  useEffect(() => {
+    const fetchNewsMap = async () => {
+      if (!intake?.projectId || viewMode !== 'news') {
+        return;
+      }
+
+      try {
+        setIsLoadingNews(true);
+        setError(null);
+        
+        // Try to get existing news map first
+        try {
+          const map = await newsAPI.getMap(intake.projectId);
+          if (map.categories && map.categories.length > 0) {
+            console.log(`📰 Loaded existing news map with ${map.totalArticles} articles`);
+            setNewsCategories(map.categories);
+            
+            // Flatten articles for easier access
+            const allArticles = map.categories.flatMap((cat: any) => 
+              cat.articles.map((article: any) => ({
+                ...article,
+                id: article.articleId,
+                category: cat.label,
+                categoryId: cat.category_id
+              }))
+            );
+            setNewsArticles(allArticles);
+            setIsLoadingNews(false);
+            return;
+          }
+        } catch (e) {
+          console.log('📰 No existing news map, building new one...');
+        }
+
+        // Build new news map
+        console.log('📰 Building news map with OpenAI...');
+        const map = await newsAPI.buildMap(intake.projectId);
+        
+        if (map.categories && map.categories.length > 0) {
+          console.log(`✅ Built news map with ${map.totalArticles} articles in ${map.categories.length} categories`);
+          setNewsCategories(map.categories);
+          
+          const allArticles = map.categories.flatMap((cat: any) => 
+            cat.articles.map((article: any) => ({
+              ...article,
+              id: article.articleId,
+              category: cat.label,
+              categoryId: cat.category_id
+            }))
+          );
+          setNewsArticles(allArticles);
+        } else {
+          setError('No news articles found for this topic.');
+        }
+        
+        setIsLoadingNews(false);
+      } catch (error: any) {
+        console.error('Error fetching news:', error);
+        setError('Failed to fetch news articles. Please try again.');
+        setIsLoadingNews(false);
+      }
+    };
+
+    fetchNewsMap();
+  }, [intake?.projectId, viewMode]);
+
   const handleSelectProject = useCallback((project: ResearchProject) => {
     setSelectedProject(project);
   }, []);
@@ -195,11 +272,8 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
           url: paper.url, // Real URL from Semantic Scholar
           isAIGenerated: paper.isAIGenerated === true, // Use actual value from backend (should be false)
           similarity: 0.7 + Math.random() * 0.2,
-          novelty: "medium",
-          feasibility: "medium",
           cluster: `similar_${project.id}`,
           clusterLabel: `Similar to ${project.title.substring(0, 30)}...`,
-          tags: ["Similar"], // Just "Similar", not "AI-generated"
           summary: paper.abstract?.substring(0, 200) + '...' || paper.title,
           similarityReasons: [`Similar to ${project.title}`],
           details: {
@@ -364,8 +438,97 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
     return { initialNodes: nodes, initialEdges: edges };
   }, [userQuery, handleSelectProject, handleFindSimilarFromNode, researchClusters, researchProjects]);
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  // Build news nodes and edges
+  const { initialNodes: newsNodes, initialEdges: newsEdges } = useMemo(() => {
+    if (viewMode !== 'news' || newsCategories.length === 0) {
+      return { initialNodes: [], initialEdges: [] };
+    }
+
+    const nodes: Node[] = [];
+    const edges: Edge[] = [];
+
+    // User node at top center (yellow for news mode)
+    nodes.push({
+      id: "user",
+      type: "userNode",
+      position: { x: 400, y: 0 },
+      data: { label: "Your Topic", description: userQuery, mode: 'news' },
+      draggable: true,
+    });
+
+    // Category nodes spread horizontally
+    const categorySpacing = 280;
+    const categoryY = 180;
+    const startX = 400 - ((newsCategories.length - 1) * categorySpacing) / 2;
+
+    newsCategories.forEach((category, index) => {
+      nodes.push({
+        id: category.category_id,
+        type: "clusterNode",
+        position: { x: startX + index * categorySpacing, y: categoryY },
+        data: { 
+          label: category.label, 
+          description: category.label,
+          projectCount: category.articles.length,
+          mode: 'news'
+        },
+        draggable: true,
+      });
+
+      // Edge from user to category (yellow)
+      edges.push({
+        id: `edge-user-${category.category_id}`,
+        source: "user",
+        target: category.category_id,
+        style: { stroke: '#fbbf24', strokeWidth: 2 },
+        animated: false,
+      });
+
+      // Article nodes under each category
+      const articleY = categoryY + 140;
+      const articleSpacing = 100;
+      const articleStartX = startX + index * categorySpacing - ((category.articles.length - 1) * articleSpacing) / 2;
+
+      category.articles.forEach((article: any, aIndex: number) => {
+        // Stagger vertically for organic look
+        const yOffset = aIndex % 2 === 0 ? 0 : 60;
+        
+        const fullArticle = newsArticles.find(a => a.articleId === article.articleId) || article;
+        
+        nodes.push({
+          id: article.articleId,
+          type: "newsNode",
+          position: { 
+            x: articleStartX + aIndex * articleSpacing, 
+            y: articleY + yOffset 
+          },
+          data: { 
+            article: {
+              ...fullArticle,
+              id: fullArticle.articleId,
+              category: category.label,
+              categoryId: category.category_id
+            },
+            onSelect: (art: any) => setSelectedArticle(art),
+            isSelected: selectedArticle?.articleId === article.articleId,
+          },
+          draggable: true,
+        });
+
+        edges.push({
+          id: `edge-category-${category.category_id}-${article.articleId}`,
+          source: category.category_id,
+          target: article.articleId,
+          style: { stroke: '#fde047', strokeWidth: 1.5 },
+        });
+      });
+    });
+
+    return { initialNodes: nodes, initialEdges: edges };
+  }, [userQuery, newsCategories, newsArticles, selectedArticle, viewMode]);
+
+  const [nodes, setNodes, onNodesChange] = useNodesState(viewMode === 'news' ? newsNodes : initialNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(viewMode === 'news' ? newsEdges : initialEdges);
 
   // Load saved positions from localStorage on mount (run early)
   useEffect(() => {
@@ -511,26 +674,55 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
     setEdges(initialEdges);
   }, [initialNodes, initialEdges, setNodes, setEdges]);
 
+  // Update nodes when view mode changes
+  useEffect(() => {
+    if (viewMode === 'news') {
+      setNodes(newsNodes);
+      setEdges(newsEdges);
+    } else {
+      setNodes(initialNodes);
+      setEdges(initialEdges);
+    }
+  }, [viewMode, newsNodes, newsEdges, initialNodes, initialEdges, setNodes, setEdges]);
+
   // Update nodes when selection or pins change
   useEffect(() => {
-    setNodes(nds => 
-      nds.map(node => {
-        if (node.type === 'projectNode') {
-          const nodeData = node.data as { project: ResearchProject };
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              isSelected: selectedProject?.id === nodeData.project?.id,
-              onSelect: handleSelectProject,
-              onFindSimilar: handleFindSimilarFromNode,
-            }
-          };
-        }
-        return node;
-      })
-    );
-  }, [selectedProject, setNodes, handleSelectProject, handleFindSimilarFromNode]);
+    if (viewMode === 'scholars') {
+      setNodes(nds => 
+        nds.map(node => {
+          if (node.type === 'projectNode') {
+            const nodeData = node.data as { project: ResearchProject };
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                isSelected: selectedProject?.id === nodeData.project?.id,
+                onSelect: handleSelectProject,
+                onFindSimilar: handleFindSimilarFromNode,
+              }
+            };
+          }
+          return node;
+        })
+      );
+    } else if (viewMode === 'news') {
+      setNodes(nds => 
+        nds.map(node => {
+          if (node.type === 'newsNode') {
+            const nodeData = node.data as any;
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                isSelected: selectedArticle?.articleId === nodeData.article?.articleId,
+              }
+            };
+          }
+          return node;
+        })
+      );
+    }
+  }, [selectedProject, selectedArticle, viewMode, setNodes, handleSelectProject, handleFindSimilarFromNode]);
 
   return (
     <div className="h-screen flex bg-background">
@@ -545,14 +737,36 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
           New exploration
         </button>
 
-        {/* Title */}
+        {/* Title and Mode Toggle */}
         <div className="absolute top-6 left-1/2 -translate-x-1/2 z-10 text-center">
-          <h1 className="font-serif text-xl font-semibold text-foreground">
-            Research Landscape
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Drag nodes to explore · Click to see details · Pin to compare
-          </p>
+          <div className="mb-3">
+            <h1 className="font-serif text-xl font-semibold text-foreground mb-1">
+              Research Landscape
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {viewMode === 'scholars' ? 'Academic papers from Semantic Scholar' : 'News articles & industry coverage'}
+            </p>
+          </div>
+          
+          {/* Mode Toggle */}
+          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="w-fit mx-auto">
+            <TabsList className="grid w-fit grid-cols-2 bg-card/80 backdrop-blur-sm">
+              <TabsTrigger 
+                value="scholars" 
+                className="flex items-center gap-2 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-900 dark:data-[state=active]:bg-blue-950 dark:data-[state=active]:text-blue-100"
+              >
+                <BookOpen className="w-4 h-4" />
+                <span className="font-medium">Scholars</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="news" 
+                className="flex items-center gap-2 data-[state=active]:bg-yellow-100 data-[state=active]:text-yellow-900 dark:data-[state=active]:bg-yellow-950 dark:data-[state=active]:text-yellow-100"
+              >
+                <Newspaper className="w-4 h-4" />
+                <span className="font-medium">News</span>
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
 
         {/* React Flow Canvas */}
@@ -573,7 +787,12 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
           zoomOnDoubleClick={!isLocked}
           nodesDraggable={!isLocked}
         >
-          <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="hsl(220 15% 85%)" />
+          <Background 
+            variant={BackgroundVariant.Dots} 
+            gap={24} 
+            size={1} 
+            color={viewMode === 'news' ? 'hsl(48 96% 70%)' : 'hsl(220 15% 85%)'} 
+          />
           <Controls 
             position="bottom-right"
             className="!bg-card !border-border !shadow-sm"
@@ -583,33 +802,39 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
         </ReactFlow>
 
         {/* Loading indicator */}
-        {isLoading && (
+        {(isLoading || isLoadingNews) && (
           <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-20">
             <div className="text-center">
-              <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
-              <p className="text-lg font-medium">Building your research landscape...</p>
-              <p className="text-sm text-muted-foreground">Analyzing papers and clustering approaches</p>
+              <Loader2 className={`w-12 h-12 animate-spin mx-auto mb-4 ${viewMode === 'news' ? 'text-yellow-500' : 'text-primary'}`} />
+              <p className="text-lg font-medium">
+                {viewMode === 'news' ? 'Finding news articles...' : 'Building your research landscape...'}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {viewMode === 'news' ? 'Searching news sources and industry coverage' : 'Analyzing papers and clustering approaches'}
+              </p>
             </div>
           </div>
         )}
 
         {/* Error message */}
-        {error && !isLoading && (
-          <div className="absolute top-24 left-1/2 -translate-x-1/2 z-10 bg-destructive/10 border border-destructive text-destructive px-4 py-2 rounded-lg">
+        {error && !isLoading && !isLoadingNews && (
+          <div className="absolute top-32 left-1/2 -translate-x-1/2 z-10 bg-destructive/10 border border-destructive text-destructive px-4 py-2 rounded-lg max-w-md text-center">
             {error}
           </div>
         )}
 
-        {/* Left panels stack - scrollable container */}
-        <div className="absolute bottom-6 left-6 z-10 flex flex-col gap-2 max-h-[calc(100vh-120px)] overflow-y-auto scrollbar-thin">
-          <NoveltyRadar clusters={researchClusters} projects={researchProjects} />
-          <FeasibilityPanel clusters={researchClusters} projects={researchProjects} />
-          <InsightPanel clusters={researchClusters} projects={researchProjects} />
-        </div>
+        {/* Left panels stack - scrollable container (only show in scholars mode) */}
+        {viewMode === 'scholars' && (
+          <div className="absolute bottom-6 left-6 z-10 flex flex-col gap-2 max-h-[calc(100vh-120px)] overflow-y-auto scrollbar-thin">
+            <NoveltyRadar clusters={researchClusters} projects={researchProjects} />
+            <FeasibilityPanel clusters={researchClusters} projects={researchProjects} />
+            <InsightPanel clusters={researchClusters} projects={researchProjects} />
+          </div>
+        )}
       </div>
 
-      {/* Detail panel - slides in from right when project selected */}
-      {selectedProject && (
+      {/* Detail panels - slides in from right when selected */}
+      {selectedProject && viewMode === 'scholars' && (
         <DetailPanel
           project={selectedProject}
           onClose={() => setSelectedProject(null)}
@@ -618,6 +843,13 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
           isInContext={chatContext.some(p => p.id === selectedProject.id)}
           onPinEvidence={onPinEvidence}
           isPinnedEvidence={pinnedEvidenceIds.includes(selectedProject.id)}
+        />
+      )}
+
+      {selectedArticle && viewMode === 'news' && (
+        <NewsDetailPanel
+          article={selectedArticle}
+          onClose={() => setSelectedArticle(null)}
         />
       )}
 

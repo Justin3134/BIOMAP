@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import projectRoutes from './routes/projects.js';
 import researchRoutes from './routes/research.js';
+import newsRoutes from './routes/news.js';
 import chatRoutes from './routes/chat.js';
 import notesRoutes from './routes/notes.js';
 
@@ -18,6 +19,7 @@ app.use(express.json());
 // Routes
 app.use('/api/projects', projectRoutes);
 app.use('/api/research', researchRoutes);
+app.use('/api/news', newsRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/notes', notesRoutes);
 

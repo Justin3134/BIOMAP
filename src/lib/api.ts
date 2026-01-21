@@ -124,6 +124,35 @@ export const researchAPI = {
   },
 };
 
+// ===== NEWS APIs =====
+
+export interface NewsCategory {
+  category_id: string;
+  label: string;
+  articles: Array<{
+    articleId: string;
+    title: string;
+    publisher: string;
+    date: string;
+    url: string | null;
+    summary: string;
+    takeaway: string;
+    category: string;
+  }>;
+}
+
+export const newsAPI = {
+  buildMap: async (projectId: string): Promise<{ categories: NewsCategory[]; totalArticles: number }> => {
+    return apiCall(`/news/map/${projectId}`, {
+      method: 'POST',
+    });
+  },
+  
+  getMap: async (projectId: string): Promise<{ categories: NewsCategory[]; totalArticles: number }> => {
+    return apiCall(`/news/map/${projectId}`);
+  },
+};
+
 // ===== NOTES APIs =====
 
 export interface Note {
