@@ -362,7 +362,7 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
     });
 
     return { initialNodes: nodes, initialEdges: edges };
-  }, [userQuery, selectedProject, handleSelectProject, handleFindSimilarFromNode, researchClusters, researchProjects]);
+  }, [userQuery, handleSelectProject, handleFindSimilarFromNode, researchClusters, researchProjects]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
