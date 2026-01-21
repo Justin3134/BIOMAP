@@ -511,12 +511,6 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
           zoomOnPinch={!isLocked}
           zoomOnDoubleClick={!isLocked}
           nodesDraggable={!isLocked}
-          connectionLineType="smoothstep"
-          defaultEdgeOptions={{
-            type: 'smoothstep',
-            animated: false,
-            style: { strokeWidth: 2 },
-          }}
         >
           <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="hsl(220 15% 85%)" />
           <Controls 
