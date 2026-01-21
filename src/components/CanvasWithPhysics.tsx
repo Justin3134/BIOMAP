@@ -247,19 +247,68 @@ const CanvasPaperNode = ({ data }: any) => (
   </>
 );
 
-const CanvasConstraintNode = ({ data }: any) => (
-  <>
-    <Handle type="target" position={Position.Top} className="!w-3 !h-3 !bg-red-500 hover:!bg-red-600 transition-colors" />
-    <div className="bg-red-50 dark:bg-red-900/20 border-2 border-red-300 dark:border-red-700 rounded-lg p-4 min-w-[200px] max-w-[300px] shadow-lg hover:shadow-xl transition-all">
-      <div className="flex items-center gap-2 mb-2">
-        <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
-        <h4 className="font-semibold text-sm select-text">{data.title || "Constraint"}</h4>
+const CanvasConstraintNode = ({ data }: any) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState(data.content || '');
+  const [editTitle, setEditTitle] = useState(data.title || 'Constraint');
+
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditContent(data.content || '');
+    setEditTitle(data.title || 'Constraint');
+    setIsEditing(true);
+  };
+
+  return (
+    <>
+      <Handle type="target" position={Position.Top} className="!w-3 !h-3 !bg-red-500 hover:!bg-red-600 transition-colors" />
+      <div 
+        className="bg-red-50 dark:bg-red-900/20 border-2 border-red-300 dark:border-red-700 rounded-lg p-4 min-w-[200px] max-w-[300px] shadow-lg hover:shadow-xl transition-all"
+        onDoubleClick={handleDoubleClick}
+        style={{ cursor: isEditing ? 'text' : 'pointer' }}
+      >
+        <div className="flex items-center gap-2 mb-2">
+          <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
+          {isEditing ? (
+            <input
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              className="font-semibold text-sm bg-white dark:bg-gray-800 border-b border-red-400 focus:outline-none px-1 flex-1"
+              autoFocus
+              onClick={(e) => e.stopPropagation()}
+            />
+          ) : (
+            <h4 className="font-semibold text-sm select-text">{data.title || "Constraint"}</h4>
+          )}
+        </div>
+        {isEditing ? (
+          <div onClick={(e) => e.stopPropagation()}>
+            <textarea
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              className="text-sm text-gray-700 dark:text-gray-300 w-full h-24 bg-white dark:bg-gray-800 border border-red-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-red-400"
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+            />
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (data.onUpdate) data.onUpdate({ title: editTitle, content: editContent });
+                setIsEditing(false);
+              }}
+              className="mt-2 px-4 py-1.5 bg-red-400 text-red-900 rounded text-sm font-medium hover:bg-red-500 transition-colors"
+            >
+              Save
+            </button>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-700 dark:text-gray-300 select-text">{data.content || 'Empty constraint'}</p>
+        )}
       </div>
-      <p className="text-sm text-gray-700 dark:text-gray-300 select-text">{data.content}</p>
-    </div>
-    <Handle type="source" position={Position.Bottom} className="!w-3 !h-3 !bg-red-500 hover:!bg-red-600 transition-colors" />
-  </>
-);
+      <Handle type="source" position={Position.Bottom} className="!w-3 !h-3 !bg-red-500 hover:!bg-red-600 transition-colors" />
+    </>
+  );
+};
 
 const nodeTypes = {
   note: CanvasNoteNode,
