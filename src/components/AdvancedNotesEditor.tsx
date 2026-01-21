@@ -287,7 +287,6 @@ Tip: Use headings (Ctrl/Cmd + Alt + 1-6) to structure your document"
       {/* Enhanced Footer with Research Tips */}
       <div className="px-6 py-3 border-t border-border bg-card/50">
         <div className="max-w-6xl mx-auto flex items-center justify-between text-xs text-muted-foreground">
-          <div className="flex items-center gap-6">
           <div className="flex items-center gap-4">
             <span>{wordCount} words</span>
             <span>•</span>
