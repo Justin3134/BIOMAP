@@ -90,8 +90,13 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
           overview
         );
         console.log('✅ Evidence extracted:', extractedEvidence);
+        console.log('Evidence structure:', {
+          what_worked: extractedEvidence?.what_worked,
+          limitations: extractedEvidence?.limitations,
+          key_lessons: extractedEvidence?.key_lessons
+        });
         setEvidence(extractedEvidence);
-        console.log(`✅ Evidence extracted successfully`);
+        console.log(`✅ Evidence set in state`);
       } catch (error) {
         console.error("Error extracting evidence:", error);
         // Fallback to empty arrays if extraction fails
@@ -113,6 +118,15 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
   if (!project) return null;
 
   const similarityPercent = Math.round(project.similarity * 100);
+  
+  // Debug: Log evidence state whenever it changes
+  console.log('🎨 DetailPanel rendering with evidence:', {
+    hasEvidence: !!evidence,
+    isLoading: isLoadingEvidence,
+    what_worked_count: evidence?.what_worked?.length || 0,
+    limitations_count: evidence?.limitations?.length || 0,
+    key_lessons_count: evidence?.key_lessons?.length || 0
+  });
 
   return (
     <div className="detail-panel w-[400px] p-6 slide-in-right relative" onMouseUp={handleTextSelection}>
@@ -292,12 +306,23 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
           </p>
         </section>
 
-        {/* External Link - Only show if we have a valid Semantic Scholar URL */}
+        {/* External Link - Debug and show appropriately */}
         {(() => {
+          // Debug logging
+          console.log('🔗 Link check for project:', {
+            id: project.id,
+            paperId: project.paperId,
+            url: project.url,
+            isAIGenerated: project.isAIGenerated
+          });
+          
           // Check if this is AI-generated
           const isAI = project.isAIGenerated === true || 
                        (project.paperId && (project.paperId.startsWith('ai_generated') || project.paperId.startsWith('similar_'))) ||
                        (project.id && (project.id.startsWith('ai_generated') || project.id.startsWith('similar_')));
+          
+          console.log('🔗 Is AI-generated?', isAI);
+          console.log('🔗 Has URL?', !!project.url);
           
           // Only show link if we have an explicit URL and it's not AI-generated
           const hasValidLink = !isAI && project.url;
