@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
   ReactFlow,
   Node,
@@ -16,7 +16,6 @@ import {
   Position,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import * as d3 from "d3-force";
 import { ResearchProject } from "@/types/research";
 import { ProjectIntake } from "@/types/workspace";
 import { Plus, FileText, Lightbulb, Target, AlertCircle } from "lucide-react";
@@ -277,10 +276,6 @@ const Canvas = ({ intake, contextProjects, pinnedEvidenceIds = [] }: CanvasProps
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
-  
-  // Physics simulation
-  const simulationRef = useRef<any>(null);
-  const isDraggingRef = useRef(false);
 
   // Load canvas from localStorage
   useEffect(() => {
@@ -308,62 +303,10 @@ const Canvas = ({ intake, contextProjects, pinnedEvidenceIds = [] }: CanvasProps
     }
   }, [nodes, edges, storageKey]);
 
-  // Obsidian-style physics simulation
-  useEffect(() => {
-    if (nodes.length === 0 || isDraggingRef.current) return;
-
-    const simulation = d3.forceSimulation(nodes as any)
-      .force("charge", d3.forceManyBody().strength(-200)) // Repulsion
-      .force("link", d3.forceLink(edges)
-        .id((d: any) => d.id)
-        .distance(150)
-        .strength(0.3) // Spring strength
-      )
-      .force("collision", d3.forceCollide().radius(100)) // Prevent overlap
-      .alphaDecay(0.02) // Slow cooling
-      .velocityDecay(0.3); // Bouncy damping
-
-    simulationRef.current = simulation;
-
-    simulation.on("tick", () => {
-      if (!isDraggingRef.current) {
-        setNodes((nds) =>
-          nds.map((node) => {
-            const simNode = simulation.nodes().find((n: any) => n.id === node.id);
-            if (simNode) {
-              return {
-                ...node,
-                position: { 
-                  x: simNode.x || node.position.x, 
-                  y: simNode.y || node.position.y 
-                },
-              };
-            }
-            return node;
-          })
-        );
-      }
-    });
-
-    return () => {
-      simulation.stop();
-    };
-  }, [nodes.length, edges.length]);
-
-  // Handle node drag with physics
+  // Simple approach: Use CSS transitions for smooth movement
   const handleNodesChange = useCallback(
     (changes: NodeChange[]) => {
-      const dragChange = changes.find((c) => c.type === 'position' && 'dragging' in c);
-      
-      if (dragChange && 'dragging' in dragChange) {
-        isDraggingRef.current = dragChange.dragging || false;
-        
-        if (!dragChange.dragging && simulationRef.current) {
-          // Released - apply spring effect
-          simulationRef.current.alpha(0.3).restart();
-        }
-      }
-      
+      // Apply changes directly - let CSS handle the smoothness
       onNodesChange(changes);
     },
     [onNodesChange]
@@ -461,11 +404,6 @@ const Canvas = ({ intake, contextProjects, pinnedEvidenceIds = [] }: CanvasProps
 
     setNodes((nds) => [...nds, newNode]);
     setShowAddMenu(false);
-    
-    // Trigger physics on new node
-    if (simulationRef.current) {
-      simulationRef.current.alpha(0.5).restart();
-    }
   }, [menuPosition, setNodes, handleUpdateNode]);
 
   // Handle canvas click to show add menu
@@ -482,10 +420,6 @@ const Canvas = ({ intake, contextProjects, pinnedEvidenceIds = [] }: CanvasProps
   const onConnect = useCallback(
     (params: Connection) => {
       setEdges((eds) => addEdge({ ...params, animated: true }, eds));
-      // Trigger physics when connecting
-      if (simulationRef.current) {
-        simulationRef.current.alpha(0.3).restart();
-      }
     },
     [setEdges]
   );
@@ -577,13 +511,28 @@ const Canvas = ({ intake, contextProjects, pinnedEvidenceIds = [] }: CanvasProps
         </h3>
         <ul className="text-xs text-muted-foreground space-y-1.5">
           <li>• Click anywhere to add nodes</li>
-          <li>• <strong>Double-click</strong> nodes to edit (no placeholder!)</li>
+          <li>• <strong>Double-click</strong> nodes to edit</li>
           <li>• <strong>Select text</strong> by clicking and dragging</li>
           <li>• Drag from dots to connect boxes</li>
-          <li>• Drag nodes - they bounce like Obsidian!</li>
+          <li>• Drag nodes to organize</li>
           <li>• Your canvas auto-saves</li>
         </ul>
       </div>
+
+      {/* Global styles for smooth node movement */}
+      <style>{`
+        .react-flow__node {
+          transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+        
+        .react-flow__node.dragging {
+          transition: none !important;
+        }
+        
+        .react-flow__edge {
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+      `}</style>
     </div>
   );
 };

@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import WorkspaceSidebar from "./WorkspaceSidebar";
-import ResearchLandscape from "./ResearchLandscape";
+import ResearchLandscape from "./ResearchLandscapeSmooth";
 import PinnedEvidence from "./PinnedEvidence";
 import ChatSidebar from "./ChatSidebar";
 import Canvas from "./CanvasWithPhysics";
