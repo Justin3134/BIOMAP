@@ -366,12 +366,12 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
     localStorage.setItem(storageKey, JSON.stringify(positions));
   }, [onNodesChange, storageKey]);
 
-  // Handle cluster node movement - move all children with it (Obsidian-style)
+  // Handle cluster node movement - move all children with it (Obsidian-style with smooth animation)
   const handleClusterMove = useCallback((changes: NodeChange[]) => {
     const positionChanges = changes.filter(c => c.type === 'position') as NodePositionChange[];
     
     positionChanges.forEach(change => {
-      if (change.id.startsWith('cluster-') && change.position && change.dragging) {
+      if (change.id.startsWith('cluster-') && change.position) {
         const clusterId = change.id.replace('cluster-', '');
         
         // Find the original position
@@ -381,7 +381,7 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
         const deltaX = change.position.x - oldNode.position.x;
         const deltaY = change.position.y - oldNode.position.y;
         
-        // Move all project nodes in this cluster
+        // Move all project nodes in this cluster smoothly
         setNodes(nds => nds.map(node => {
           if (node.type === 'projectNode') {
             const project = (node.data as any).project;
@@ -392,7 +392,34 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
                   x: node.position.x + deltaX,
                   y: node.position.y + deltaY,
                 },
+                // Add smooth transition
+                style: {
+                  ...node.style,
+                  transition: change.dragging ? 'none' : 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                },
               };
+            }
+            
+            // Also move similar papers under this cluster's projects
+            if (project && project.cluster?.startsWith('similar_')) {
+              const parentId = project.cluster.replace('similar_', '');
+              const parentNode = nds.find(n => n.id === `project-${parentId}`);
+              if (parentNode) {
+                const parentProject = (parentNode.data as any).project;
+                if (parentProject && parentProject.cluster === clusterId) {
+                  return {
+                    ...node,
+                    position: {
+                      x: node.position.x + deltaX,
+                      y: node.position.y + deltaY,
+                    },
+                    style: {
+                      ...node.style,
+                      transition: change.dragging ? 'none' : 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    },
+                  };
+                }
+              }
             }
           }
           return node;
@@ -484,6 +511,12 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
           zoomOnPinch={!isLocked}
           zoomOnDoubleClick={!isLocked}
           nodesDraggable={!isLocked}
+          connectionLineType="smoothstep"
+          defaultEdgeOptions={{
+            type: 'smoothstep',
+            animated: false,
+            style: { strokeWidth: 2 },
+          }}
         >
           <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="hsl(220 15% 85%)" />
           <Controls 

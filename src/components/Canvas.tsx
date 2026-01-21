@@ -12,6 +12,8 @@ import {
   EdgeChange,
   Connection,
   addEdge,
+  Handle,
+  Position,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { ResearchProject } from "@/types/research";
@@ -25,63 +27,203 @@ interface CanvasProps {
 }
 
 // Custom node types for Canvas
-const CanvasNoteNode = ({ data }: any) => (
-  <div className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-300 dark:border-yellow-700 rounded-lg p-4 min-w-[200px] max-w-[300px] shadow-md">
-    <div className="flex items-center gap-2 mb-2">
-      <FileText className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
-      <h4 className="font-semibold text-sm">{data.title || "Note"}</h4>
-    </div>
-    <p className="text-xs text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{data.content}</p>
-    {data.timestamp && (
-      <p className="text-xs text-gray-500 mt-2">{new Date(data.timestamp).toLocaleDateString()}</p>
-    )}
-  </div>
-);
+const CanvasNoteNode = ({ data }: any) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState(data.content || '');
+  const [editTitle, setEditTitle] = useState(data.title || 'Note');
 
-const CanvasInsightNode = ({ data }: any) => (
-  <div className="bg-purple-50 dark:bg-purple-900/20 border-2 border-purple-300 dark:border-purple-700 rounded-lg p-4 min-w-[200px] max-w-[300px] shadow-md">
-    <div className="flex items-center gap-2 mb-2">
-      <Lightbulb className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-      <h4 className="font-semibold text-sm">{data.title || "Insight"}</h4>
-    </div>
-    <p className="text-xs text-gray-700 dark:text-gray-300">{data.content}</p>
-  </div>
-);
+  const handleDoubleClick = () => {
+    setIsEditing(true);
+  };
 
-const CanvasDecisionNode = ({ data }: any) => (
-  <div className="bg-green-50 dark:bg-green-900/20 border-2 border-green-300 dark:border-green-700 rounded-lg p-4 min-w-[200px] max-w-[300px] shadow-md">
-    <div className="flex items-center gap-2 mb-2">
-      <Target className="w-4 h-4 text-green-600 dark:text-green-400" />
-      <h4 className="font-semibold text-sm">{data.title || "Decision"}</h4>
-    </div>
-    <p className="text-xs text-gray-700 dark:text-gray-300">{data.content}</p>
-    {data.rationale && (
-      <p className="text-xs text-gray-500 mt-2 italic">{data.rationale}</p>
-    )}
-  </div>
-);
+  const handleSave = () => {
+    if (data.onUpdate) {
+      data.onUpdate({ title: editTitle, content: editContent });
+    }
+    setIsEditing(false);
+  };
+
+  return (
+    <>
+      <Handle type="target" position={Position.Top} className="!w-2 !h-2" />
+      <div 
+        className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-300 dark:border-yellow-700 rounded-lg p-4 min-w-[200px] max-w-[300px] shadow-md cursor-pointer"
+        onDoubleClick={handleDoubleClick}
+      >
+        <div className="flex items-center gap-2 mb-2">
+          <FileText className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
+          {isEditing ? (
+            <input
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              className="font-semibold text-sm bg-transparent border-b border-yellow-400 focus:outline-none"
+              autoFocus
+            />
+          ) : (
+            <h4 className="font-semibold text-sm">{data.title || "Note"}</h4>
+          )}
+        </div>
+        {isEditing ? (
+          <div>
+            <textarea
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              className="text-xs text-gray-700 dark:text-gray-300 w-full h-32 bg-transparent border border-yellow-300 rounded p-2 focus:outline-none"
+              placeholder="Type your note..."
+            />
+            <button
+              onClick={handleSave}
+              className="mt-2 px-3 py-1 bg-yellow-400 text-yellow-900 rounded text-xs font-medium hover:bg-yellow-500"
+            >
+              Save
+            </button>
+          </div>
+        ) : (
+          <>
+            <p className="text-xs text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{data.content}</p>
+            <p className="text-xs text-gray-400 mt-2 italic">Double-click to edit</p>
+          </>
+        )}
+        {data.timestamp && !isEditing && (
+          <p className="text-xs text-gray-500 mt-2">{new Date(data.timestamp).toLocaleDateString()}</p>
+        )}
+      </div>
+      <Handle type="source" position={Position.Bottom} className="!w-2 !h-2" />
+    </>
+  );
+};
+
+const CanvasInsightNode = ({ data }: any) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState(data.content || '');
+  const [editTitle, setEditTitle] = useState(data.title || 'Insight');
+
+  return (
+    <>
+      <Handle type="target" position={Position.Top} className="!w-2 !h-2" />
+      <div 
+        className="bg-purple-50 dark:bg-purple-900/20 border-2 border-purple-300 dark:border-purple-700 rounded-lg p-4 min-w-[200px] max-w-[300px] shadow-md cursor-pointer"
+        onDoubleClick={() => setIsEditing(true)}
+      >
+        <div className="flex items-center gap-2 mb-2">
+          <Lightbulb className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+          {isEditing ? (
+            <input
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              className="font-semibold text-sm bg-transparent border-b border-purple-400 focus:outline-none"
+              autoFocus
+            />
+          ) : (
+            <h4 className="font-semibold text-sm">{data.title || "Insight"}</h4>
+          )}
+        </div>
+        {isEditing ? (
+          <div>
+            <textarea
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              className="text-xs text-gray-700 dark:text-gray-300 w-full h-24 bg-transparent border border-purple-300 rounded p-2 focus:outline-none"
+            />
+            <button
+              onClick={() => {
+                if (data.onUpdate) data.onUpdate({ title: editTitle, content: editContent });
+                setIsEditing(false);
+              }}
+              className="mt-2 px-3 py-1 bg-purple-400 text-purple-900 rounded text-xs font-medium"
+            >
+              Save
+            </button>
+          </div>
+        ) : (
+          <p className="text-xs text-gray-700 dark:text-gray-300">{data.content}</p>
+        )}
+      </div>
+      <Handle type="source" position={Position.Bottom} className="!w-2 !h-2" />
+    </>
+  );
+};
+
+const CanvasDecisionNode = ({ data }: any) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState(data.content || '');
+  const [editTitle, setEditTitle] = useState(data.title || 'Decision');
+
+  return (
+    <>
+      <Handle type="target" position={Position.Top} className="!w-2 !h-2" />
+      <div 
+        className="bg-green-50 dark:bg-green-900/20 border-2 border-green-300 dark:border-green-700 rounded-lg p-4 min-w-[200px] max-w-[300px] shadow-md cursor-pointer"
+        onDoubleClick={() => setIsEditing(true)}
+      >
+        <div className="flex items-center gap-2 mb-2">
+          <Target className="w-4 h-4 text-green-600 dark:text-green-400" />
+          {isEditing ? (
+            <input
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              className="font-semibold text-sm bg-transparent border-b border-green-400 focus:outline-none"
+              autoFocus
+            />
+          ) : (
+            <h4 className="font-semibold text-sm">{data.title || "Decision"}</h4>
+          )}
+        </div>
+        {isEditing ? (
+          <div>
+            <textarea
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              className="text-xs text-gray-700 dark:text-gray-300 w-full h-24 bg-transparent border border-green-300 rounded p-2 focus:outline-none"
+            />
+            <button
+              onClick={() => {
+                if (data.onUpdate) data.onUpdate({ title: editTitle, content: editContent });
+                setIsEditing(false);
+              }}
+              className="mt-2 px-3 py-1 bg-green-400 text-green-900 rounded text-xs font-medium"
+            >
+              Save
+            </button>
+          </div>
+        ) : (
+          <p className="text-xs text-gray-700 dark:text-gray-300">{data.content}</p>
+        )}
+      </div>
+      <Handle type="source" position={Position.Bottom} className="!w-2 !h-2" />
+    </>
+  );
+};
 
 const CanvasPaperNode = ({ data }: any) => (
-  <div className="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-300 dark:border-blue-700 rounded-lg p-4 min-w-[250px] max-w-[350px] shadow-md">
-    <h4 className="font-semibold text-sm mb-2 text-blue-900 dark:text-blue-100">{data.title}</h4>
-    <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">{data.authors}</p>
-    <p className="text-xs text-gray-700 dark:text-gray-300 line-clamp-3">{data.summary}</p>
-    {data.similarity && (
-      <div className="mt-2 text-xs text-blue-600 dark:text-blue-400 font-semibold">
-        {Math.round(data.similarity * 100)}% match
-      </div>
-    )}
-  </div>
+  <>
+    <Handle type="target" position={Position.Top} className="!w-2 !h-2" />
+    <div className="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-300 dark:border-blue-700 rounded-lg p-4 min-w-[250px] max-w-[350px] shadow-md">
+      <h4 className="font-semibold text-sm mb-2 text-blue-900 dark:text-blue-100">{data.title}</h4>
+      <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">{data.authors}</p>
+      <p className="text-xs text-gray-700 dark:text-gray-300 line-clamp-3">{data.summary}</p>
+      {data.similarity && (
+        <div className="mt-2 text-xs text-blue-600 dark:text-blue-400 font-semibold">
+          {Math.round(data.similarity * 100)}% match
+        </div>
+      )}
+    </div>
+    <Handle type="source" position={Position.Bottom} className="!w-2 !h-2" />
+  </>
 );
 
 const CanvasConstraintNode = ({ data }: any) => (
-  <div className="bg-red-50 dark:bg-red-900/20 border-2 border-red-300 dark:border-red-700 rounded-lg p-4 min-w-[200px] max-w-[300px] shadow-md">
-    <div className="flex items-center gap-2 mb-2">
-      <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
-      <h4 className="font-semibold text-sm">{data.title || "Constraint"}</h4>
+  <>
+    <Handle type="target" position={Position.Top} className="!w-2 !h-2" />
+    <div className="bg-red-50 dark:bg-red-900/20 border-2 border-red-300 dark:border-red-700 rounded-lg p-4 min-w-[200px] max-w-[300px] shadow-md">
+      <div className="flex items-center gap-2 mb-2">
+        <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
+        <h4 className="font-semibold text-sm">{data.title || "Constraint"}</h4>
+      </div>
+      <p className="text-xs text-gray-700 dark:text-gray-300">{data.content}</p>
     </div>
-    <p className="text-xs text-gray-700 dark:text-gray-300">{data.content}</p>
-  </div>
+    <Handle type="source" position={Position.Bottom} className="!w-2 !h-2" />
+  </>
 );
 
 const nodeTypes = {
@@ -190,22 +332,35 @@ const Canvas = ({ intake, contextProjects, pinnedEvidenceIds = [] }: CanvasProps
     setEdges(initialEdges);
   }, [intake, contextProjects, setNodes, setEdges]);
 
+  // Handle node content updates
+  const handleUpdateNode = useCallback((nodeId: string, newData: any) => {
+    setNodes((nds) =>
+      nds.map((node) =>
+        node.id === nodeId
+          ? { ...node, data: { ...node.data, ...newData } }
+          : node
+      )
+    );
+  }, [setNodes]);
+
   // Handle adding new nodes
   const handleAddNode = useCallback((type: string) => {
+    const nodeId = `${type}-${Date.now()}`;
     const newNode: Node = {
-      id: `${type}-${Date.now()}`,
+      id: nodeId,
       type,
       position: { x: menuPosition.x, y: menuPosition.y },
       data: {
         title: type.charAt(0).toUpperCase() + type.slice(1),
         content: 'Double-click to edit...',
         timestamp: Date.now(),
+        onUpdate: (data: any) => handleUpdateNode(nodeId, data),
       },
     };
 
     setNodes((nds) => [...nds, newNode]);
     setShowAddMenu(false);
-  }, [menuPosition, setNodes]);
+  }, [menuPosition, setNodes, handleUpdateNode]);
 
   // Handle canvas click to show add menu
   const handlePaneClick = useCallback((event: React.MouseEvent) => {
@@ -302,10 +457,10 @@ const Canvas = ({ intake, contextProjects, pinnedEvidenceIds = [] }: CanvasProps
         <h3 className="font-semibold text-sm mb-2">Canvas Guide</h3>
         <ul className="text-xs text-muted-foreground space-y-1">
           <li>• Click anywhere to add nodes</li>
+          <li>• <strong>Double-click</strong> nodes to edit</li>
+          <li>• Drag from dots to connect boxes</li>
           <li>• Drag nodes to organize</li>
-          <li>• Connect nodes by dragging from handles</li>
           <li>• Your canvas auto-saves</li>
-          <li>• Papers from context appear automatically</li>
         </ul>
       </div>
     </div>

@@ -5,6 +5,7 @@ import ResearchLandscape from "./ResearchLandscape";
 import PinnedEvidence from "./PinnedEvidence";
 import ChatSidebar from "./ChatSidebar";
 import Canvas from "./Canvas";
+import RichNotesEditor from "./RichNotesEditor";
 import { ProjectIntake, WorkspaceState, DecisionLogEntry, PinnedEvidence as PinnedEvidenceType } from "@/types/workspace";
 import { ResearchProject } from "@/types/research";
 import { FileText, Save } from "lucide-react";
@@ -101,20 +102,13 @@ const WorkspaceLayout = ({ intake, onReset, onUpdateIntake }: WorkspaceLayoutPro
     setChatContext(prev => prev.filter(p => p.id !== projectId));
   }, []);
 
-  // Notes page component
+  // Notes page component with rich text editor
   const NotesPage = () => (
-    <div className="h-full flex flex-col p-6">
-      <h1 className="font-serif text-2xl font-semibold text-foreground mb-2">Notes</h1>
-      <p className="text-sm text-muted-foreground mb-4">
-        Free-form notes for your research project
-      </p>
-      <textarea
-        value={workspaceState.notes}
-        onChange={(e) => setWorkspaceState(prev => ({ ...prev, notes: e.target.value }))}
-        placeholder="Start typing your notes..."
-        className="flex-1 w-full bg-card border border-border rounded-xl p-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
-      />
-    </div>
+    <RichNotesEditor
+      value={workspaceState.notes}
+      onChange={(value) => setWorkspaceState(prev => ({ ...prev, notes: value }))}
+      projectTitle={intake.title}
+    />
   );
 
   // Overview page component with editing
