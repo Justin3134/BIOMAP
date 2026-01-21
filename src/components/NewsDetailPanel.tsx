@@ -43,16 +43,20 @@ const NewsDetailPanel = ({
   const handlePinEvidence = () => {
     if (onPinEvidence) {
       onPinEvidence(article);
-      setJustPinned(true);
-      setTimeout(() => setJustPinned(false), 2000);
+      if (!isPinnedEvidence) {
+        setJustPinned(true);
+        setTimeout(() => setJustPinned(false), 2000);
+      }
     }
   };
 
   const handleAddToChat = () => {
     if (onAddToContext) {
       onAddToContext(article);
-      setJustAddedToChat(true);
-      setTimeout(() => setJustAddedToChat(false), 2000);
+      if (!isInContext) {
+        setJustAddedToChat(true);
+        setTimeout(() => setJustAddedToChat(false), 2000);
+      }
     }
   };
 
@@ -110,11 +114,18 @@ const NewsDetailPanel = ({
                 onClick={handleAddToChat}
                 variant={isInContext ? "secondary" : "default"}
                 size="sm"
-                className="flex items-center gap-2"
-                disabled={isInContext}
+                className={`flex items-center gap-2 transition-all ${
+                  justAddedToChat ? 'ring-2 ring-primary ring-offset-2' : ''
+                }`}
               >
                 <MessageSquare className="w-4 h-4" />
-                {justAddedToChat ? "Added!" : isInContext ? "In Chat" : "Add to Chat"}
+                {justAddedToChat ? (
+                  <span className="font-semibold">Added! ✓</span>
+                ) : isInContext ? (
+                  "In Chat Context"
+                ) : (
+                  "Add to Chat"
+                )}
               </Button>
             )}
 
@@ -123,11 +134,18 @@ const NewsDetailPanel = ({
                 onClick={handlePinEvidence}
                 variant={isPinnedEvidence ? "secondary" : "outline"}
                 size="sm"
-                className="flex items-center gap-2"
-                disabled={isPinnedEvidence}
+                className={`flex items-center gap-2 transition-all ${
+                  justPinned ? 'ring-2 ring-primary ring-offset-2' : ''
+                }`}
               >
-                <Pin className="w-4 h-4" />
-                {justPinned ? "Pinned!" : isPinnedEvidence ? "Pinned" : "Pin Evidence"}
+                <Pin className={`w-4 h-4 ${isPinnedEvidence ? 'fill-current' : ''}`} />
+                {justPinned ? (
+                  <span className="font-semibold">Pinned! ✓</span>
+                ) : isPinnedEvidence ? (
+                  "Pinned to Evidence"
+                ) : (
+                  "Pin Evidence"
+                )}
               </Button>
             )}
           </div>
@@ -137,20 +155,22 @@ const NewsDetailPanel = ({
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
         {/* Similarity Badge */}
-        <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-              <span className="text-lg font-bold text-primary">{similarityPercent}%</span>
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-sm text-foreground mb-1">
-                Similarity to Your Idea
-              </h3>
-              <p className="text-xs text-muted-foreground">
-                This article has {similarityPercent}% relevance to your research topic
-              </p>
-            </div>
+        <div className="bg-secondary border border-border rounded-lg p-4">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-semibold text-sm text-foreground">
+              Similarity to Your Idea
+            </h3>
+            <span className="text-lg font-bold text-primary">{similarityPercent}%</span>
           </div>
+          <div className="w-full h-2.5 bg-muted rounded-full overflow-hidden mb-2">
+            <div 
+              className="h-full bg-primary rounded-full transition-all duration-500"
+              style={{ width: `${similarityPercent}%` }}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            This news article is <span className="font-semibold text-foreground">{similarityPercent}%</span> relevant to your research topic
+          </p>
         </div>
 
         {/* What Happened */}

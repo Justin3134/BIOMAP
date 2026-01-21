@@ -247,6 +247,55 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
     console.log("Ask about:", text, "from project:", project.title);
   }, [onAddToContext, chatContext]);
 
+  // Transform news article to ResearchProject format for context/pinning
+  const transformArticleToProject = useCallback((article: any): ResearchProject => {
+    return {
+      id: article.articleId,
+      paperId: article.articleId,
+      title: article.title,
+      summary: article.whatHappened || article.summary || '',
+      abstract: article.whatHappened || article.summary || '',
+      year: new Date(article.date).getFullYear(),
+      authors: article.publisher,
+      cluster: article.categoryId || article.category,
+      clusterLabel: article.category,
+      similarity: article.similarity || 0.75,
+      similarityReasons: article.whyItMatters || [`Relevant news coverage from ${article.publisher}`],
+      url: article.url || null,
+      isAIGenerated: false,
+      details: {
+        overview: article.whatHappened || article.summary || '',
+        whatWorked: article.keyClaims || [],
+        whatDidntWork: [],
+        keyLessons: article.whatToWatch || [],
+        relationToIdea: article.relationToTopic || '',
+        externalLink: article.url || null,
+        year: new Date(article.date).getFullYear(),
+        authors: [article.publisher],
+        approach: 'News Coverage',
+        difficulty: 'Low',
+        cost: 'Low',
+        timeframe: 'Current'
+      }
+    };
+  }, []);
+
+  // Handle adding article to context
+  const handleAddArticleToContext = useCallback((article: any) => {
+    if (onAddToContext) {
+      const projectFormat = transformArticleToProject(article);
+      onAddToContext(projectFormat);
+    }
+  }, [onAddToContext, transformArticleToProject]);
+
+  // Handle pinning article as evidence
+  const handlePinArticle = useCallback((article: any) => {
+    if (onPinEvidence) {
+      const projectFormat = transformArticleToProject(article);
+      onPinEvidence(projectFormat);
+    }
+  }, [onPinEvidence, transformArticleToProject]);
+
   // Handle finding similar papers from a node
   const handleFindSimilarFromNode = useCallback(async (project: ResearchProject) => {
     console.log(`🔍 Finding similar papers for: ${project.title}`);
@@ -879,9 +928,9 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
         <NewsDetailPanel
           article={selectedArticle}
           onClose={() => setSelectedArticle(null)}
-          onAddToContext={onAddToContext}
+          onAddToContext={handleAddArticleToContext}
           isInContext={chatContext.some(p => p.id === selectedArticle.articleId)}
-          onPinEvidence={onPinEvidence}
+          onPinEvidence={handlePinArticle}
           isPinnedEvidence={pinnedEvidenceIds.includes(selectedArticle.articleId)}
         />
       )}

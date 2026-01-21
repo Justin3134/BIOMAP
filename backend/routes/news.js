@@ -92,7 +92,7 @@ Return ONLY valid JSON in this exact format:
             messages: [
                 {
                     role: 'system',
-                    content: 'You are a news research assistant. Generate realistic, detailed news articles that could actually exist from real publications. Use proper journalistic style and specific details. Return only valid JSON.'
+                    content: 'You are a news research assistant. Generate realistic, detailed news articles that could actually exist from real publications. Use proper journalistic style and specific details. IMPORTANT: Ensure all JSON strings are properly escaped. Use \\n for newlines, \\" for quotes. Return only valid JSON.'
                 },
                 {
                     role: 'user',
@@ -105,7 +105,32 @@ Return ONLY valid JSON in this exact format:
         });
 
         const content = response.choices[0].message.content;
-        const newsData = JSON.parse(content);
+        
+        // Parse JSON with better error handling
+        let newsData;
+        try {
+            newsData = JSON.parse(content);
+        } catch (parseError) {
+            console.error('❌ JSON parsing error:', parseError.message);
+            console.error('Raw content length:', content.length);
+            console.error('Content preview:', content.substring(0, 200));
+            
+            // Try to clean up common JSON issues
+            try {
+                // Remove any markdown code fences if present
+                let cleanedContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+                newsData = JSON.parse(cleanedContent);
+                console.log('✅ JSON parsed after cleanup');
+            } catch (secondError) {
+                console.error('❌ Still cannot parse JSON after cleanup');
+                return res.status(500).json({
+                    success: false,
+                    error: 'Failed to parse news data from AI response',
+                    categories: [],
+                    totalArticles: 0
+                });
+            }
+        }
 
         if (!newsData.categories || newsData.categories.length === 0) {
             console.log('❌ No news articles generated');
