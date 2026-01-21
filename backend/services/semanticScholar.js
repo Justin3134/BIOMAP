@@ -2,6 +2,10 @@ import axios from 'axios';
 
 const BASE_URL = 'https://api.semanticscholar.org/graph/v1';
 
+// In-memory cache for Semantic Scholar responses
+const cache = new Map();
+const CACHE_TTL = 1000 * 60 * 60; // 1 hour
+
 /**
  * Sleep helper for retry logic
  */
@@ -10,10 +14,45 @@ function sleep(ms) {
 }
 
 /**
+ * Get cached result or null if expired/missing
+ */
+function getCached(key) {
+  const cached = cache.get(key);
+  if (!cached) return null;
+  
+  const age = Date.now() - cached.timestamp;
+  if (age > CACHE_TTL) {
+    cache.delete(key);
+    return null;
+  }
+  
+  console.log(`📦 Cache hit for: ${key.substring(0, 50)}... (age: ${Math.round(age / 1000)}s)`);
+  return cached.data;
+}
+
+/**
+ * Store result in cache
+ */
+function setCache(key, data) {
+  cache.set(key, {
+    data,
+    timestamp: Date.now()
+  });
+  console.log(`💾 Cached result for: ${key.substring(0, 50)}... (total cached: ${cache.size})`);
+}
+
+/**
  * Search papers using Semantic Scholar (Step 2A)
- * With retry logic for rate limiting
+ * With caching and retry logic for rate limiting
  */
 export async function searchPapers(query, limit = 20, retries = 3) {
+  // Check cache first
+  const cacheKey = `search:${query}:${limit}`;
+  const cached = getCached(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
       // Add delay between attempts (exponential backoff)
@@ -32,8 +71,13 @@ export async function searchPapers(query, limit = 20, retries = 3) {
         timeout: 10000 // 10 second timeout
       });
 
-      console.log(`✅ Semantic Scholar returned ${response.data.data?.length || 0} papers`);
-      return response.data.data || [];
+      const results = response.data.data || [];
+      console.log(`✅ Semantic Scholar returned ${results.length} papers`);
+      
+      // Cache the results
+      setCache(cacheKey, results);
+      
+      return results;
       
     } catch (error) {
       if (error.response?.status === 429 && attempt < retries - 1) {
@@ -56,9 +100,16 @@ export async function searchPapers(query, limit = 20, retries = 3) {
 }
 
 /**
- * Get paper details by ID
+ * Get paper details by ID (with caching)
  */
 export async function getPaperDetails(paperId) {
+  // Check cache first
+  const cacheKey = `paper:${paperId}`;
+  const cached = getCached(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
   try {
     const response = await axios.get(`${BASE_URL}/paper/${paperId}`, {
       params: {
@@ -66,7 +117,12 @@ export async function getPaperDetails(paperId) {
       }
     });
 
-    return response.data;
+    const result = response.data;
+    
+    // Cache the result
+    setCache(cacheKey, result);
+    
+    return result;
   } catch (error) {
     console.error('Failed to get paper details:', error.message);
     return null;
