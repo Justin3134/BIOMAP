@@ -51,8 +51,9 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Store node positions in localStorage to persist across tab changes
+  // Store node positions and similar papers in localStorage to persist across tab changes
   const storageKey = `biomap-positions-${intake?.projectId || 'default'}`;
+  const similarPapersKey = `biomap-similar-${intake?.projectId || 'default'}`;
   const savedPositionsRef = useRef<Map<string, { x: number; y: number }>>(new Map());
 
   // Fetch real research map from backend
@@ -127,6 +128,18 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
           });
         });
 
+        // Load saved similar papers from localStorage and merge them
+        try {
+          const savedSimilar = localStorage.getItem(similarPapersKey);
+          if (savedSimilar) {
+            const similarPapers = JSON.parse(savedSimilar);
+            console.log(`📍 Loaded ${similarPapers.length} saved similar papers`);
+            transformedProjects.push(...similarPapers);
+          }
+        } catch (e) {
+          console.warn('Failed to load saved similar papers:', e);
+        }
+
         setResearchClusters(transformedClusters);
         setResearchProjects(transformedProjects);
         setIsLoading(false);
@@ -143,7 +156,7 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
     };
 
     fetchResearchMap();
-  }, [intake?.projectId]);
+  }, [intake?.projectId, similarPapersKey]);
 
   const handleSelectProject = useCallback((project: ResearchProject) => {
     setSelectedProject(project);
@@ -206,7 +219,20 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
         }));
 
         // Add to research projects
-        setResearchProjects(prev => [...prev, ...newProjects]);
+        setResearchProjects(prev => {
+          const updated = [...prev, ...newProjects];
+          
+          // Save all similar papers to localStorage
+          const allSimilarPapers = updated.filter(p => p.cluster?.startsWith('similar_'));
+          try {
+            localStorage.setItem(similarPapersKey, JSON.stringify(allSimilarPapers));
+            console.log(`💾 Saved ${allSimilarPapers.length} similar papers to localStorage`);
+          } catch (e) {
+            console.warn('Failed to save similar papers:', e);
+          }
+          
+          return updated;
+        });
         
         console.log(`✅ Added ${newProjects.length} similar paper nodes`);
       } else {
@@ -215,7 +241,7 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
     } catch (error) {
       console.error('Failed to find similar papers:', error);
     }
-  }, []);
+  }, [similarPapersKey]);
 
   // Build nodes and edges
   const { initialNodes, initialEdges } = useMemo(() => {
@@ -341,17 +367,24 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
-  // Load saved positions from localStorage on mount
+  // Load saved positions from localStorage on mount (run early)
   useEffect(() => {
     const saved = localStorage.getItem(storageKey);
     if (saved) {
       try {
         const positions = JSON.parse(saved);
         savedPositionsRef.current = new Map(Object.entries(positions));
-        console.log(`📍 Loaded ${savedPositionsRef.current.size} saved node positions`);
+        console.log(`📍 Loaded ${savedPositionsRef.current.size} saved node positions from localStorage`);
+        // Log a sample to verify
+        if (savedPositionsRef.current.size > 0) {
+          const [firstKey, firstPos] = savedPositionsRef.current.entries().next().value;
+          console.log(`   Example: ${firstKey} -> (${firstPos.x}, ${firstPos.y})`);
+        }
       } catch (e) {
         console.warn('Failed to load saved positions:', e);
       }
+    } else {
+      console.log('📍 No saved positions found for this project');
     }
   }, [storageKey]);
 
@@ -360,18 +393,23 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
     onNodesChange(changes);
     
     // Save position changes (save both during drag and after)
+    let savedCount = 0;
     changes.forEach(change => {
       if (change.type === 'position' && change.position) {
         const posChange = change as NodePositionChange;
         if (posChange.position) {
           savedPositionsRef.current.set(posChange.id, posChange.position);
+          savedCount++;
         }
       }
     });
     
     // Save to localStorage
-    const positions = Object.fromEntries(savedPositionsRef.current);
-    localStorage.setItem(storageKey, JSON.stringify(positions));
+    if (savedCount > 0) {
+      const positions = Object.fromEntries(savedPositionsRef.current);
+      localStorage.setItem(storageKey, JSON.stringify(positions));
+      console.log(`💾 Saved ${savedCount} node position(s) (total: ${savedPositionsRef.current.size})`);
+    }
   }, [onNodesChange, storageKey]);
 
   // Handle cluster node movement - move all children with it (Obsidian-style with smooth animation)
@@ -445,14 +483,29 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
     // Preserve existing node positions when updating (prioritize saved positions)
     setNodes(nds => {
       const currentPositionMap = new Map(nds.map(n => [n.id, n.position]));
+      let restoredCount = 0;
       
-      return initialNodes.map(node => ({
-        ...node,
+      const updatedNodes = initialNodes.map(node => {
         // Priority: saved position > current position > initial position
-        position: savedPositionsRef.current.get(node.id) || 
-                  currentPositionMap.get(node.id) || 
-                  node.position,
-      }));
+        const savedPos = savedPositionsRef.current.get(node.id);
+        const currentPos = currentPositionMap.get(node.id);
+        const finalPos = savedPos || currentPos || node.position;
+        
+        if (savedPos) {
+          restoredCount++;
+        }
+        
+        return {
+          ...node,
+          position: finalPos,
+        };
+      });
+      
+      if (restoredCount > 0) {
+        console.log(`✅ Restored ${restoredCount} node positions from saved data`);
+      }
+      
+      return updatedNodes;
     });
     
     setEdges(initialEdges);
