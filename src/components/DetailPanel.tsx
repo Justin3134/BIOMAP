@@ -63,30 +63,23 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
     });
     
     const fetchEvidence = async () => {
-      // Check if we already have evidence in the project details
-      if (project.details?.whatWorked?.length > 0) {
-        setEvidence({
-          what_worked: project.details.whatWorked,
-          limitations: project.details.whatDidntWork,
-          key_lessons: project.details.keyLessons,
-          practical_constraints: []
-        });
-        return;
-      }
-
+      // Always try to extract evidence from the overview
+      // Don't rely on pre-existing details as they may not have the evidence fields
+      
       // Check if we have an overview to extract from
-      if (!overview || overview === 'No abstract available') {
-        console.warn('⚠️ No overview available for evidence extraction');
+      if (!overview || overview === 'No abstract available' || overview.length < 20) {
+        console.warn('⚠️ No sufficient overview available for evidence extraction');
         setEvidence({
-          what_worked: ["No abstract available for analysis"],
-          limitations: ["No abstract available for analysis"],
-          key_lessons: ["No abstract available for analysis"],
+          what_worked: ["Limited information available for detailed analysis"],
+          limitations: ["Limited information available for detailed analysis"],
+          key_lessons: ["Review the overview section for available information"],
           practical_constraints: []
         });
+        setIsLoadingEvidence(false);
         return;
       }
 
-      // Otherwise, extract evidence using OpenAI
+      // Extract evidence using OpenAI
       setIsLoadingEvidence(true);
       try {
         console.log(`🔍 Extracting evidence for: ${project.title}`);
@@ -96,6 +89,7 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
           project.title,
           overview
         );
+        console.log('✅ Evidence extracted:', extractedEvidence);
         setEvidence(extractedEvidence);
         console.log(`✅ Evidence extracted successfully`);
       } catch (error) {
@@ -298,24 +292,37 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
           </p>
         </section>
 
-        {/* External Link */}
-        {project.isAIGenerated === true || 
-         (project.paperId && (project.paperId.startsWith('ai_generated') || project.paperId.startsWith('similar_'))) ? (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground italic">
-            <Lightbulb className="w-4 h-4" />
-            AI-generated research paper (no external link)
-          </div>
-        ) : (
-          <a
-            href={project.url || (project.paperId ? `https://www.semanticscholar.org/paper/${project.paperId}` : `https://www.semanticscholar.org/paper/${project.id}`)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-sm text-primary hover:underline"
-          >
-            <ExternalLink className="w-4 h-4" />
-            View original paper on Semantic Scholar
-          </a>
-        )}
+        {/* External Link - Only show if we have a valid Semantic Scholar URL */}
+        {(() => {
+          // Check if this is AI-generated
+          const isAI = project.isAIGenerated === true || 
+                       (project.paperId && (project.paperId.startsWith('ai_generated') || project.paperId.startsWith('similar_'))) ||
+                       (project.id && (project.id.startsWith('ai_generated') || project.id.startsWith('similar_')));
+          
+          // Only show link if we have an explicit URL and it's not AI-generated
+          const hasValidLink = !isAI && project.url;
+          
+          if (hasValidLink) {
+            return (
+              <a
+                href={project.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-sm text-primary hover:underline"
+              >
+                <ExternalLink className="w-4 h-4" />
+                View original paper on Semantic Scholar
+              </a>
+            );
+          } else {
+            return (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground italic">
+                <Lightbulb className="w-4 h-4" />
+                AI-generated research paper (no external link available)
+              </div>
+            );
+          }
+        })()}
 
         {/* Tip: Use + button on node to find similar papers */}
         <div className="pt-4 border-t border-border">

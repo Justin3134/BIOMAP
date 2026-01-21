@@ -1,10 +1,15 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
-import ReactQuill from 'react-quill';
+import ReactQuill, { Quill } from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { 
   Save, Download, FileText, Upload, Printer, Share2, 
   FileDown, Copy, CheckCircle, Clock, BookOpen 
 } from 'lucide-react';
+
+// Register custom fonts for the editor
+const Font = Quill.import('formats/font');
+Font.whitelist = ['serif', 'monospace', 'sans-serif', 'arial', 'georgia', 'times-new-roman'];
+Quill.register(Font, true);
 
 interface AdvancedNotesEditorProps {
   value: string;
@@ -127,7 +132,7 @@ const AdvancedNotesEditor = ({ value, onChange, projectTitle }: AdvancedNotesEdi
     toolbar: {
       container: [
         [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-        [{ 'font': [] }],
+        [{ 'font': ['serif', 'monospace', 'sans-serif', 'arial', 'georgia', 'times-new-roman'] }],
         [{ 'size': ['small', false, 'large', 'huge'] }],
         ['bold', 'italic', 'underline', 'strike'],
         [{ 'color': [] }, { 'background': [] }],
@@ -157,6 +162,16 @@ const AdvancedNotesEditor = ({ value, onChange, projectTitle }: AdvancedNotesEdi
 
   return (
     <div className="h-full flex flex-col bg-background">
+      {/* Font styles for Quill editor */}
+      <style>{`
+        .ql-font-serif { font-family: Georgia, serif; }
+        .ql-font-monospace { font-family: 'Courier New', monospace; }
+        .ql-font-sans-serif { font-family: Arial, sans-serif; }
+        .ql-font-arial { font-family: Arial, Helvetica, sans-serif; }
+        .ql-font-georgia { font-family: Georgia, serif; }
+        .ql-font-times-new-roman { font-family: 'Times New Roman', Times, serif; }
+      `}</style>
+      
       {/* Enhanced Header */}
       <div className="flex items-center justify-between px-6 py-3 border-b border-border bg-card shadow-sm">
         <div className="flex items-center gap-3">
