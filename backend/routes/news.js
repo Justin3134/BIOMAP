@@ -29,7 +29,7 @@ router.post('/map/:projectId', async (req, res) => {
 
 Topic: ${searchQuery}
 
-Find 15-20 diverse, REAL news articles across 5 different aspects/angles of this topic. These should be realistic articles that could actually exist from major news outlets, industry publications, and scientific news sources.
+Find 10-12 diverse, REAL news articles across 5 different aspects/angles of this topic. These should be realistic articles that could actually exist from major news outlets, industry publications, and scientific news sources.
 
 For each article, provide:
 - title: Realistic headline that could appear in the publication
@@ -100,7 +100,7 @@ Return ONLY valid JSON in this exact format:
                 }
             ],
             temperature: 0.7,
-            max_tokens: 4000,
+            max_tokens: 8000,
             response_format: { type: "json_object" }
         });
 
