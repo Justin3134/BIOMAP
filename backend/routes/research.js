@@ -299,7 +299,7 @@ router.post('/evidence', async (req, res) => {
 
 /**
  * POST /api/research/similar
- * Find similar papers using OpenAI
+ * Find similar papers using Semantic Scholar (REAL PAPERS ONLY)
  */
 router.post('/similar', async (req, res) => {
     try {
@@ -310,78 +310,67 @@ router.post('/similar', async (req, res) => {
             count = 5
         } = req.body;
 
-        if (!title || !abstract) {
+        if (!title) {
             return res.status(400).json({
-                error: 'title and abstract are required'
+                error: 'title is required'
             });
         }
 
         console.log(`🔍 Finding similar papers to: ${title}`);
 
-        // Use OpenAI to generate similar paper suggestions
-        const {
-            default: OpenAI
-        } = await import('openai');
-        const openai = new OpenAI({
-            apiKey: process.env.OPENAI_API_KEY
-        });
+        // Extract key terms from title for search
+        const keywords = title
+            .split(' ')
+            .filter(word => word.length > 3) // Remove short words
+            .slice(0, 5) // Take first 5 meaningful words
+            .join(' ');
+        
+        console.log(`🔍 Searching Semantic Scholar with keywords: "${keywords}"`);
 
-        const prompt = `Based on this research paper, suggest ${count} similar real research papers in the same field:
-
-Title: ${title}
-Abstract: ${abstract.substring(0, 500)}
-
-Generate ${count} realistic similar papers with:
-- Different but related titles
-- Similar methodology or research area
-- Realistic author names
-- Years between 2018-2024
-- Brief abstracts (100 words)
-
-Return ONLY valid JSON array:
-[{"title":"...","abstract":"...","year":2023,"authors":"Name1, Name2","approach":"method"}]`;
-
-        const response = await openai.chat.completions.create({
-            model: 'gpt-4o-mini',
-            messages: [{
-                    role: 'system',
-                    content: 'You are a research database. Generate realistic similar papers. Return valid JSON only.'
-                },
-                {
-                    role: 'user',
-                    content: prompt
-                }
-            ],
-            temperature: 0.8,
-            max_tokens: 2000,
-            response_format: {
-                type: "json_object"
+        // Search Semantic Scholar for real similar papers
+        let papers = [];
+        try {
+            papers = await searchPapers(keywords, count + 3); // Get a few extra
+            
+            // Filter out the original paper if it's in results
+            if (paperId) {
+                papers = papers.filter(p => p.paperId !== paperId);
             }
-        });
-
-        const content = response.choices[0].message.content;
-        const parsed = JSON.parse(content);
-        const papers = parsed.papers || parsed.results || parsed;
-
-        if (!Array.isArray(papers)) {
-            console.error('❌ OpenAI did not return an array');
+            
+            // Take only the requested count
+            papers = papers.slice(0, count);
+        } catch (error) {
+            console.error('⚠️ Semantic Scholar search failed:', error.message);
             return res.json({
+                success: false,
+                message: 'Could not find similar papers. Semantic Scholar may be rate limiting.',
                 similarPapers: []
             });
         }
 
-        // Transform to consistent format
-        const similarPapers = papers.map((p, idx) => ({
-            paperId: `similar_${Date.now()}_${idx}`,
+        if (papers.length === 0) {
+            console.log('❌ No similar papers found');
+            return res.json({
+                success: false,
+                message: 'No similar papers found',
+                similarPapers: []
+            });
+        }
+
+        // Transform to consistent format (REAL PAPERS from Semantic Scholar)
+        const similarPapers = papers.map(p => ({
+            paperId: p.paperId,
             title: p.title,
-            abstract: p.abstract,
+            abstract: p.abstract || 'No abstract available',
             year: p.year || 2023,
-            authors: typeof p.authors === 'string' ? p.authors : p.authors?.join(', ') || 'Unknown',
-            url: null,
-            isAIGenerated: true
+            authors: p.authors?.slice(0, 3).map(a => a.name).join(', ') || 'Unknown',
+            url: p.paperId ? `https://www.semanticscholar.org/paper/${p.paperId}` : null,
+            isAIGenerated: false, // REAL papers from Semantic Scholar
+            citationCount: p.citationCount || 0,
+            venue: p.venue || 'Unknown'
         }));
 
-        console.log(`✅ Generated ${similarPapers.length} similar papers`);
+        console.log(`✅ Found ${similarPapers.length} REAL similar papers from Semantic Scholar`);
 
         res.json({
             success: true,

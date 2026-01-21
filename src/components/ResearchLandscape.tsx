@@ -184,7 +184,7 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
       if (similarPapers && similarPapers.length > 0) {
         console.log(`📍 Adding ${similarPapers.length} similar papers below ${project.title}`);
         
-        // Transform similar papers to ResearchProject format
+        // Transform similar papers to ResearchProject format (REAL papers from Semantic Scholar)
         const newProjects: ResearchProject[] = similarPapers.map((paper: any) => ({
           id: paper.paperId,
           paperId: paper.paperId,
@@ -192,14 +192,14 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
           year: paper.year,
           authors: paper.authors,
           abstract: paper.abstract,
-          url: paper.url || null,
-          isAIGenerated: paper.isAIGenerated !== false, // Default to true for similar papers
+          url: paper.url, // Real URL from Semantic Scholar
+          isAIGenerated: paper.isAIGenerated === true, // Use actual value from backend (should be false)
           similarity: 0.7 + Math.random() * 0.2,
           novelty: "medium",
           feasibility: "medium",
           cluster: `similar_${project.id}`,
           clusterLabel: `Similar to ${project.title.substring(0, 30)}...`,
-          tags: ["AI-generated", "Similar"],
+          tags: ["Similar"], // Just "Similar", not "AI-generated"
           summary: paper.abstract?.substring(0, 200) + '...' || paper.title,
           similarityReasons: [`Similar to ${project.title}`],
           details: {
