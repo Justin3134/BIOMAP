@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import {
   ReactFlow,
   Node,
@@ -8,6 +8,8 @@ import {
   useNodesState,
   useEdgesState,
   BackgroundVariant,
+  NodeChange,
+  NodePositionChange,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
@@ -48,6 +50,10 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
   const [researchProjects, setResearchProjects] = useState<ResearchProject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Store node positions in localStorage to persist across tab changes
+  const storageKey = `biomap-positions-${intake?.projectId || 'default'}`;
+  const savedPositionsRef = useRef<Map<string, { x: number; y: number }>>(new Map());
 
   // Fetch real research map from backend
   useEffect(() => {
@@ -147,44 +153,60 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
     console.log("Ask about:", text, "from project:", project.title);
   }, [onAddToContext, chatContext]);
 
-  // Handle adding similar papers as nodes below a paper
-  const handleAddSimilarPapers = useCallback((parentProject: ResearchProject, similarPapers: any[]) => {
-    console.log(`📍 Adding ${similarPapers.length} similar papers below ${parentProject.title}`);
+  // Handle finding similar papers from a node
+  const handleFindSimilarFromNode = useCallback(async (project: ResearchProject) => {
+    console.log(`🔍 Finding similar papers for: ${project.title}`);
     
-    // Transform similar papers to ResearchProject format
-    const newProjects: ResearchProject[] = similarPapers.map((paper, idx) => ({
-      id: paper.paperId,
-      title: paper.title,
-      year: paper.year,
-      authors: paper.authors,
-      similarity: 0.7 + Math.random() * 0.2, // Simulated similarity
-      novelty: "medium",
-      feasibility: "medium",
-      cluster: `similar_${parentProject.id}`,
-      clusterLabel: `Similar to ${parentProject.title.substring(0, 30)}...`,
-      tags: ["AI-generated", "Similar"],
-      summary: paper.abstract,
-      similarityReasons: [`Similar to ${parentProject.title}`],
-      details: {
-        overview: paper.abstract || "No abstract available",
-        whatWorked: [],
-        whatDidntWork: [],
-        keyLessons: [],
-        relationToIdea: `This paper is similar to ${parentProject.title}`,
-        externalLink: paper.url,
-        year: paper.year,
-        authors: paper.authors?.split(', ') || [],
-        approach: "Similar research",
-        difficulty: "Medium",
-        cost: "Medium",
-        timeframe: "6-12 months"
-      }
-    }));
+    try {
+      const similarPapers = await researchAPI.findSimilar(
+        project.id,
+        project.title,
+        project.details?.overview || project.summary
+      );
+      
+      if (similarPapers && similarPapers.length > 0) {
+        console.log(`📍 Adding ${similarPapers.length} similar papers below ${project.title}`);
+        
+        // Transform similar papers to ResearchProject format
+        const newProjects: ResearchProject[] = similarPapers.map((paper: any) => ({
+          id: paper.paperId,
+          title: paper.title,
+          year: paper.year,
+          authors: paper.authors,
+          similarity: 0.7 + Math.random() * 0.2,
+          novelty: "medium",
+          feasibility: "medium",
+          cluster: `similar_${project.id}`,
+          clusterLabel: `Similar to ${project.title.substring(0, 30)}...`,
+          tags: ["AI-generated", "Similar"],
+          summary: paper.abstract?.substring(0, 200) + '...' || paper.title,
+          similarityReasons: [`Similar to ${project.title}`],
+          details: {
+            overview: paper.abstract || "No abstract available",
+            whatWorked: [],
+            whatDidntWork: [],
+            keyLessons: [],
+            relationToIdea: `This paper is similar to ${project.title}`,
+            externalLink: paper.url || `https://www.semanticscholar.org/paper/${paper.paperId}`,
+            year: paper.year,
+            authors: paper.authors?.split(', ') || [],
+            approach: "Similar research",
+            difficulty: "Medium",
+            cost: "Medium",
+            timeframe: "6-12 months"
+          }
+        }));
 
-    // Add to research projects
-    setResearchProjects(prev => [...prev, ...newProjects]);
-    
-    console.log(`✅ Added ${newProjects.length} similar paper nodes`);
+        // Add to research projects
+        setResearchProjects(prev => [...prev, ...newProjects]);
+        
+        console.log(`✅ Added ${newProjects.length} similar paper nodes`);
+      } else {
+        console.warn('No similar papers found');
+      }
+    } catch (error) {
+      console.error('Failed to find similar papers:', error);
+    }
   }, []);
 
   // Build nodes and edges
@@ -250,6 +272,7 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
             project, 
             onSelect: handleSelectProject,
             isSelected: selectedProject?.id === project.id,
+            onFindSimilar: handleFindSimilarFromNode,
           },
           draggable: true,
         });
@@ -286,6 +309,7 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
                 project: similarPaper,
                 isSelected: selectedProject?.id === similarPaper.id,
                 onSelect: handleSelectProject,
+                onFindSimilar: handleFindSimilarFromNode,
               },
               draggable: true,
             });
@@ -304,22 +328,95 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
     });
 
     return { initialNodes: nodes, initialEdges: edges };
-  }, [userQuery, selectedProject, handleSelectProject, researchClusters, researchProjects]);
+  }, [userQuery, selectedProject, handleSelectProject, handleFindSimilarFromNode, researchClusters, researchProjects]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+  // Load saved positions from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem(storageKey);
+    if (saved) {
+      try {
+        const positions = JSON.parse(saved);
+        savedPositionsRef.current = new Map(Object.entries(positions));
+        console.log(`📍 Loaded ${savedPositionsRef.current.size} saved node positions`);
+      } catch (e) {
+        console.warn('Failed to load saved positions:', e);
+      }
+    }
+  }, [storageKey]);
+
+  // Save positions to localStorage whenever nodes move
+  const handleNodesChange = useCallback((changes: NodeChange[]) => {
+    onNodesChange(changes);
+    
+    // Save position changes
+    changes.forEach(change => {
+      if (change.type === 'position' && change.position && !change.dragging) {
+        const posChange = change as NodePositionChange;
+        if (posChange.position) {
+          savedPositionsRef.current.set(posChange.id, posChange.position);
+        }
+      }
+    });
+    
+    // Debounced save to localStorage
+    const positions = Object.fromEntries(savedPositionsRef.current);
+    localStorage.setItem(storageKey, JSON.stringify(positions));
+  }, [onNodesChange, storageKey]);
+
+  // Handle cluster node movement - move all children with it (Obsidian-style)
+  const handleClusterMove = useCallback((changes: NodeChange[]) => {
+    const positionChanges = changes.filter(c => c.type === 'position') as NodePositionChange[];
+    
+    positionChanges.forEach(change => {
+      if (change.id.startsWith('cluster-') && change.position && change.dragging) {
+        const clusterId = change.id.replace('cluster-', '');
+        
+        // Find the original position
+        const oldNode = nodes.find(n => n.id === change.id);
+        if (!oldNode || !change.position) return;
+        
+        const deltaX = change.position.x - oldNode.position.x;
+        const deltaY = change.position.y - oldNode.position.y;
+        
+        // Move all project nodes in this cluster
+        setNodes(nds => nds.map(node => {
+          if (node.type === 'projectNode') {
+            const project = (node.data as any).project;
+            if (project && project.cluster === clusterId) {
+              return {
+                ...node,
+                position: {
+                  x: node.position.x + deltaX,
+                  y: node.position.y + deltaY,
+                },
+              };
+            }
+          }
+          return node;
+        }));
+      }
+    });
+    
+    handleNodesChange(changes);
+  }, [nodes, setNodes, handleNodesChange]);
 
   // Force update nodes and edges when data changes (preserve positions)
   useEffect(() => {
     console.log(`Updating React Flow with ${initialNodes.length} nodes and ${initialEdges.length} edges`);
     
-    // Preserve existing node positions when updating
+    // Preserve existing node positions when updating (prioritize saved positions)
     setNodes(nds => {
-      const positionMap = new Map(nds.map(n => [n.id, n.position]));
+      const currentPositionMap = new Map(nds.map(n => [n.id, n.position]));
       
       return initialNodes.map(node => ({
         ...node,
-        position: positionMap.get(node.id) || node.position, // Use existing position if available
+        // Priority: saved position > current position > initial position
+        position: savedPositionsRef.current.get(node.id) || 
+                  currentPositionMap.get(node.id) || 
+                  node.position,
       }));
     });
     
@@ -338,13 +435,14 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
               ...node.data,
               isSelected: selectedProject?.id === nodeData.project?.id,
               onSelect: handleSelectProject,
+              onFindSimilar: handleFindSimilarFromNode,
             }
           };
         }
         return node;
       })
     );
-  }, [selectedProject, setNodes, handleSelectProject]);
+  }, [selectedProject, setNodes, handleSelectProject, handleFindSimilarFromNode]);
 
   return (
     <div className="h-screen flex bg-background">
@@ -373,7 +471,7 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
         <ReactFlow
           nodes={nodes}
           edges={edges}
-          onNodesChange={isLocked ? undefined : onNodesChange}
+          onNodesChange={isLocked ? undefined : handleClusterMove}
           onEdgesChange={isLocked ? undefined : onEdgesChange}
           nodeTypes={nodeTypes}
           fitView
@@ -432,7 +530,6 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
           isInContext={chatContext.some(p => p.id === selectedProject.id)}
           onPinEvidence={onPinEvidence}
           isPinnedEvidence={pinnedEvidenceIds.includes(selectedProject.id)}
-          onAddSimilarPapers={handleAddSimilarPapers}
         />
       )}
 

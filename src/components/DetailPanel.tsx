@@ -11,16 +11,14 @@ interface DetailPanelProps {
   isInContext?: boolean;
   onPinEvidence?: (project: ResearchProject) => void;
   isPinnedEvidence?: boolean;
-  onAddSimilarPapers?: (parentProject: ResearchProject, similarPapers: any[]) => void;
 }
 
-const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInContext, onPinEvidence, isPinnedEvidence, onAddSimilarPapers }: DetailPanelProps) => {
+const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInContext, onPinEvidence, isPinnedEvidence }: DetailPanelProps) => {
   const [selectedText, setSelectedText] = useState<string>("");
   const [showAskButton, setShowAskButton] = useState(false);
   const [askButtonPosition, setAskButtonPosition] = useState({ x: 0, y: 0 });
   const [evidence, setEvidence] = useState<any>(null);
   const [isLoadingEvidence, setIsLoadingEvidence] = useState(false);
-  const [isLoadingSimilar, setIsLoadingSimilar] = useState(false);
 
   const handleTextSelection = useCallback(() => {
     const selection = window.getSelection();
@@ -114,69 +112,6 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
     fetchEvidence();
   }, [project?.id]);
 
-  // Find similar papers using OpenAI
-  const handleFindSimilar = async () => {
-    if (!project || isLoadingSimilar) return;
-    
-    setIsLoadingSimilar(true);
-    
-    try {
-      // Get abstract - try multiple sources
-      const abstract = project.details.overview || project.summary || project.title;
-      
-      console.log(`🔍 Finding similar papers to: ${project.title}`);
-      console.log(`📄 Using abstract (${abstract.length} chars): ${abstract.substring(0, 150)}...`);
-      
-      const requestBody = {
-        paperId: project.id,
-        title: project.title,
-        abstract: abstract,
-        count: 3
-      };
-      
-      console.log('📤 Sending request:', requestBody);
-      
-      // Use OpenAI to generate similar paper suggestions based on the current paper
-      const response = await fetch('http://localhost:3001/api/research/similar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody)
-      });
-      
-      console.log(`📥 Response status: ${response.status}`);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ API error response:', errorText);
-        throw new Error(`API error: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      console.log('📦 Full API response:', data);
-      
-      const papers = data.similarPapers || [];
-      
-      console.log(`✅ Found ${papers.length} similar papers`);
-      
-      if (papers.length === 0) {
-        console.warn('⚠️ No similar papers returned from API - response was:', data);
-        return;
-      }
-      
-      // Pass similar papers back to ResearchLandscape to add as nodes
-      if (onAddSimilarPapers) {
-        console.log(`📍 Calling onAddSimilarPapers with ${papers.length} papers...`);
-        onAddSimilarPapers(project, papers);
-        console.log('✅ Similar papers added to map!');
-      } else {
-        console.error('❌ onAddSimilarPapers callback not provided');
-      }
-    } catch (error) {
-      console.error("❌ Error finding similar papers:", error);
-    } finally {
-      setIsLoadingSimilar(false);
-    }
-  };
 
   if (!project) return null;
 
@@ -373,27 +308,10 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
           </a>
         )}
 
-        {/* Find Similar Papers Button */}
+        {/* Tip: Use + button on node to find similar papers */}
         <div className="pt-4 border-t border-border">
-          <button
-            onClick={handleFindSimilar}
-            disabled={isLoadingSimilar}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-lg transition-colors disabled:opacity-50"
-          >
-            {isLoadingSimilar ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Adding similar papers to map...
-              </>
-            ) : (
-              <>
-                <Plus className="w-4 h-4" />
-                Find Similar Papers
-              </>
-            )}
-          </button>
-          <p className="text-xs text-muted-foreground text-center mt-2">
-            Adds 3 similar papers as nodes below this one
+          <p className="text-xs text-muted-foreground text-center">
+            💡 Hover over the paper node and click the <span className="font-semibold text-primary">+</span> button to find similar papers
           </p>
         </div>
       </div>

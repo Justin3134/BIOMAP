@@ -1,12 +1,13 @@
 import { memo, useState } from "react";
 import { Handle, Position } from "@xyflow/react";
 import { ResearchProject } from "@/types/research";
-import { HelpCircle, X } from "lucide-react";
+import { HelpCircle, X, Plus } from "lucide-react";
 
 interface ProjectNodeData {
   project: ResearchProject;
   onSelect: (project: ResearchProject) => void;
   isSelected: boolean;
+  onFindSimilar?: (project: ResearchProject) => void;
 }
 
 interface ProjectNodeProps {
@@ -14,9 +15,19 @@ interface ProjectNodeProps {
 }
 
 const ProjectNode = memo(({ data }: ProjectNodeProps) => {
-  const { project, onSelect, isSelected } = data;
+  const { project, onSelect, isSelected, onFindSimilar } = data;
   const [showWhySimilar, setShowWhySimilar] = useState(false);
+  const [isLoadingSimilar, setIsLoadingSimilar] = useState(false);
   const similarityPercent = Math.round(project.similarity * 100);
+  
+  const handleFindSimilar = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onFindSimilar && !isLoadingSimilar) {
+      setIsLoadingSimilar(true);
+      await onFindSimilar(project);
+      setIsLoadingSimilar(false);
+    }
+  };
   
   return (
     <div className="relative group">
@@ -30,6 +41,28 @@ const ProjectNode = memo(({ data }: ProjectNodeProps) => {
       <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center text-xs font-semibold text-primary shadow-sm z-10">
         {similarityPercent}
       </div>
+
+      {/* + Button at bottom - shows on hover */}
+      {onFindSimilar && (
+        <button
+          onClick={handleFindSimilar}
+          disabled={isLoadingSimilar}
+          className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-primary text-primary-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center shadow-lg hover:scale-110 disabled:opacity-50 z-20"
+          title="Find similar papers"
+        >
+          {isLoadingSimilar ? (
+            <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <Plus className="w-4 h-4" />
+          )}
+        </button>
+      )}
+
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        className="!w-2 !h-2 !bg-node-project-border !border-2 !border-card"
+      />
 
       <button
         onClick={() => onSelect(project)}
