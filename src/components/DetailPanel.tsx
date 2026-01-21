@@ -51,17 +51,20 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
   useEffect(() => {
     if (!project) return;
     
+    // Get overview from either project.abstract, project.summary, or project.details.overview
+    const overview = project.abstract || project.summary || project.details?.overview || '';
+    
     console.log('📋 DetailPanel received project:', {
       id: project.id,
       title: project.title,
-      hasOverview: !!project.details.overview,
-      overviewLength: project.details.overview?.length || 0,
-      overviewPreview: project.details.overview?.substring(0, 100)
+      hasOverview: !!overview,
+      overviewLength: overview.length || 0,
+      overviewPreview: overview.substring(0, 100)
     });
     
     const fetchEvidence = async () => {
       // Check if we already have evidence in the project details
-      if (project.details.whatWorked?.length > 0) {
+      if (project.details?.whatWorked?.length > 0) {
         setEvidence({
           what_worked: project.details.whatWorked,
           limitations: project.details.whatDidntWork,
@@ -72,7 +75,7 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
       }
 
       // Check if we have an overview to extract from
-      if (!project.details.overview || project.details.overview === 'No abstract available') {
+      if (!overview || overview === 'No abstract available') {
         console.warn('⚠️ No overview available for evidence extraction');
         setEvidence({
           what_worked: ["No abstract available for analysis"],
@@ -87,11 +90,11 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
       setIsLoadingEvidence(true);
       try {
         console.log(`🔍 Extracting evidence for: ${project.title}`);
-        console.log(`📄 Using overview (${project.details.overview.length} chars): ${project.details.overview.substring(0, 150)}...`);
+        console.log(`📄 Using overview (${overview.length} chars): ${overview.substring(0, 150)}...`);
         const extractedEvidence = await researchAPI.extractEvidence(
           project.id,
           project.title,
-          project.details.overview
+          overview
         );
         setEvidence(extractedEvidence);
         console.log(`✅ Evidence extracted successfully`);
@@ -145,7 +148,7 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
             {project.title}
           </h2>
           <p className="text-sm text-muted-foreground mt-2">
-            {project.details.year} · {project.details.authors.join(", ")}
+            {project.year || project.details?.year} · {typeof project.authors === 'string' ? project.authors : project.details?.authors?.join(", ")}
           </p>
         </div>
         <button
@@ -211,7 +214,7 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
         <section>
           <h3 className="font-serif font-semibold text-foreground mb-2">Overview</h3>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            {project.details.overview}
+            {project.abstract || project.summary || project.details?.overview || 'No abstract available'}
           </p>
         </section>
 
@@ -291,12 +294,12 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
             <h3 className="font-serif font-semibold text-foreground">How This Relates to Your Idea</h3>
           </div>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            {project.details.relationToIdea}
+            {project.details?.relationToIdea || 'Relation to your research idea not yet analyzed.'}
           </p>
         </section>
 
         {/* External Link */}
-        {project.details.externalLink && (
+        {project.details?.externalLink && (
           <a
             href={project.details.externalLink}
             target="_blank"

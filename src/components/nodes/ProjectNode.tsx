@@ -64,10 +64,10 @@ const ProjectNode = memo(({ data }: ProjectNodeProps) => {
         className="!w-2 !h-2 !bg-node-project-border !border-2 !border-card"
       />
 
-      <button
+      <div
         onClick={() => onSelect(project)}
         className={`
-          bg-node-project border rounded-xl px-4 py-3 max-w-[200px] text-left node-card
+          bg-node-project border rounded-xl px-4 py-3 max-w-[200px] text-left node-card cursor-pointer
           transition-all duration-200
           ${isSelected 
             ? 'border-primary border-2 ring-4 ring-primary/10' 
@@ -93,7 +93,7 @@ const ProjectNode = memo(({ data }: ProjectNodeProps) => {
           <HelpCircle className="w-3 h-3" />
           <span>Why similar?</span>
         </button>
-      </button>
+      </div>
 
       {/* Why Similar Popup */}
       {showWhySimilar && (
