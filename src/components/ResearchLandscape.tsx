@@ -94,9 +94,13 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
           cluster.papers.forEach((paper: any) => {
             transformedProjects.push({
               id: paper.paperId,
+              paperId: paper.paperId, // Add paperId explicitly
               title: paper.title,
               year: paper.year,
               authors: paper.authors || "Unknown",
+              abstract: paper.abstract, // Add abstract at top level
+              url: paper.url, // Add URL at top level (from backend)
+              isAIGenerated: paper.isAIGenerated, // Add isAIGenerated flag (from backend)
               similarity: paper.similarity,
               novelty: paper.similarity > 0.8 ? "high" : paper.similarity > 0.6 ? "medium" : "low",
               feasibility: "medium",
@@ -170,9 +174,13 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
         // Transform similar papers to ResearchProject format
         const newProjects: ResearchProject[] = similarPapers.map((paper: any) => ({
           id: paper.paperId,
+          paperId: paper.paperId,
           title: paper.title,
           year: paper.year,
           authors: paper.authors,
+          abstract: paper.abstract,
+          url: paper.url || null,
+          isAIGenerated: paper.isAIGenerated !== false, // Default to true for similar papers
           similarity: 0.7 + Math.random() * 0.2,
           novelty: "medium",
           feasibility: "medium",

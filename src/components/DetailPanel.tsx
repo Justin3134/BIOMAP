@@ -54,14 +54,6 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
     // Get overview from either project.abstract, project.summary, or project.details.overview
     const overview = project.abstract || project.summary || project.details?.overview || '';
     
-    console.log('📋 DetailPanel received project:', {
-      id: project.id,
-      title: project.title,
-      hasOverview: !!overview,
-      overviewLength: overview.length || 0,
-      overviewPreview: overview.substring(0, 100)
-    });
-    
     const fetchEvidence = async () => {
       // Always try to extract evidence from the overview
       // Don't rely on pre-existing details as they may not have the evidence fields
@@ -83,20 +75,13 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
       setIsLoadingEvidence(true);
       try {
         console.log(`🔍 Extracting evidence for: ${project.title}`);
-        console.log(`📄 Using overview (${overview.length} chars): ${overview.substring(0, 150)}...`);
         const extractedEvidence = await researchAPI.extractEvidence(
           project.id,
           project.title,
           overview
         );
-        console.log('✅ Evidence extracted:', extractedEvidence);
-        console.log('Evidence structure:', {
-          what_worked: extractedEvidence?.what_worked,
-          limitations: extractedEvidence?.limitations,
-          key_lessons: extractedEvidence?.key_lessons
-        });
         setEvidence(extractedEvidence);
-        console.log(`✅ Evidence set in state`);
+        console.log(`✅ Evidence extracted with ${extractedEvidence?.what_worked?.length || 0} insights`);
       } catch (error) {
         console.error("Error extracting evidence:", error);
         // Fallback to empty arrays if extraction fails
@@ -118,15 +103,6 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
   if (!project) return null;
 
   const similarityPercent = Math.round(project.similarity * 100);
-  
-  // Debug: Log evidence state whenever it changes
-  console.log('🎨 DetailPanel rendering with evidence:', {
-    hasEvidence: !!evidence,
-    isLoading: isLoadingEvidence,
-    what_worked_count: evidence?.what_worked?.length || 0,
-    limitations_count: evidence?.limitations?.length || 0,
-    key_lessons_count: evidence?.key_lessons?.length || 0
-  });
 
   return (
     <div className="detail-panel w-[400px] p-6 slide-in-right relative" onMouseUp={handleTextSelection}>
@@ -306,48 +282,23 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
           </p>
         </section>
 
-        {/* External Link - Debug and show appropriately */}
-        {(() => {
-          // Debug logging
-          console.log('🔗 Link check for project:', {
-            id: project.id,
-            paperId: project.paperId,
-            url: project.url,
-            isAIGenerated: project.isAIGenerated
-          });
-          
-          // Check if this is AI-generated
-          const isAI = project.isAIGenerated === true || 
-                       (project.paperId && (project.paperId.startsWith('ai_generated') || project.paperId.startsWith('similar_'))) ||
-                       (project.id && (project.id.startsWith('ai_generated') || project.id.startsWith('similar_')));
-          
-          console.log('🔗 Is AI-generated?', isAI);
-          console.log('🔗 Has URL?', !!project.url);
-          
-          // Only show link if we have an explicit URL and it's not AI-generated
-          const hasValidLink = !isAI && project.url;
-          
-          if (hasValidLink) {
-            return (
-              <a
-                href={project.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 text-sm text-primary hover:underline"
-              >
-                <ExternalLink className="w-4 h-4" />
-                View original paper on Semantic Scholar
-              </a>
-            );
-          } else {
-            return (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground italic">
-                <Lightbulb className="w-4 h-4" />
-                AI-generated research paper (no external link available)
-              </div>
-            );
-          }
-        })()}
+        {/* External Link - Only show if URL exists */}
+        {project.url ? (
+          <a
+            href={project.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-sm text-primary hover:underline"
+          >
+            <ExternalLink className="w-4 h-4" />
+            View original paper on Semantic Scholar
+          </a>
+        ) : (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground italic">
+            <Lightbulb className="w-4 h-4" />
+            AI-generated research paper (no external link available)
+          </div>
+        )}
 
         {/* Tip: Use + button on node to find similar papers */}
         <div className="pt-4 border-t border-border">
