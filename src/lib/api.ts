@@ -113,6 +113,15 @@ export const researchAPI = {
     });
     return result.evidence;
   },
+
+  // Find Similar Papers
+  findSimilar: async (paperId: string, title: string, abstract: string, count: number = 5): Promise<any[]> => {
+    const result = await apiCall('/research/similar', {
+      method: 'POST',
+      body: JSON.stringify({ paperId, title, abstract, count }),
+    });
+    return result.similarPapers;
+  },
 };
 
 // ===== NOTES APIs =====
