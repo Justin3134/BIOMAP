@@ -299,17 +299,15 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
         </section>
 
         {/* External Link */}
-        {project.details?.externalLink && (
-          <a
-            href={project.details.externalLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-sm text-primary hover:underline"
-          >
-            <ExternalLink className="w-4 h-4" />
-            View original paper
-          </a>
-        )}
+        <a
+          href={`https://www.semanticscholar.org/paper/${project.id}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 text-sm text-primary hover:underline"
+        >
+          <ExternalLink className="w-4 h-4" />
+          View original paper on Semantic Scholar
+        </a>
 
         {/* Tip: Use + button on node to find similar papers */}
         <div className="pt-4 border-t border-border">

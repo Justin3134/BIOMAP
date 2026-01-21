@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { 
@@ -122,8 +122,8 @@ const AdvancedNotesEditor = ({ value, onChange, projectTitle }: AdvancedNotesEdi
     }
   };
 
-  // Enhanced toolbar with research-focused features
-  const modules = {
+  // Enhanced toolbar with research-focused features - use useMemo to prevent recreation
+  const modules = useMemo(() => ({
     toolbar: {
       container: [
         [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
@@ -142,9 +142,9 @@ const AdvancedNotesEditor = ({ value, onChange, projectTitle }: AdvancedNotesEdi
     clipboard: {
       matchVisual: false,
     },
-  };
+  }), []);
 
-  const formats = [
+  const formats = useMemo(() => [
     'header', 'font', 'size',
     'bold', 'italic', 'underline', 'strike',
     'color', 'background',
@@ -153,7 +153,7 @@ const AdvancedNotesEditor = ({ value, onChange, projectTitle }: AdvancedNotesEdi
     'align',
     'blockquote', 'code-block',
     'link', 'image', 'video'
-  ];
+  ], []);
 
   return (
     <div className="h-full flex flex-col bg-background">

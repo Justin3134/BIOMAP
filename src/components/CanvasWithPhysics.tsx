@@ -504,8 +504,8 @@ const Canvas = ({ intake, contextProjects, pinnedEvidenceIds = [] }: CanvasProps
         </div>
       )}
 
-      {/* Instructions */}
-      <div className="absolute bottom-6 left-6 z-10 bg-card/90 backdrop-blur-sm border border-border rounded-lg p-4 max-w-xs shadow-lg">
+      {/* Instructions - positioned lower on screen */}
+      <div className="absolute bottom-20 left-6 z-10 bg-card/90 backdrop-blur-sm border border-border rounded-lg p-4 max-w-xs shadow-lg">
         <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
           <span className="text-primary">✨</span> Canvas Guide
         </h3>

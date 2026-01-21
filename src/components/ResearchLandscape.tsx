@@ -351,9 +351,9 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
   const handleNodesChange = useCallback((changes: NodeChange[]) => {
     onNodesChange(changes);
     
-    // Save position changes
+    // Save position changes (save both during drag and after)
     changes.forEach(change => {
-      if (change.type === 'position' && change.position && !change.dragging) {
+      if (change.type === 'position' && change.position) {
         const posChange = change as NodePositionChange;
         if (posChange.position) {
           savedPositionsRef.current.set(posChange.id, posChange.position);
@@ -361,7 +361,7 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
       }
     });
     
-    // Debounced save to localStorage
+    // Save to localStorage
     const positions = Object.fromEntries(savedPositionsRef.current);
     localStorage.setItem(storageKey, JSON.stringify(positions));
   }, [onNodesChange, storageKey]);
