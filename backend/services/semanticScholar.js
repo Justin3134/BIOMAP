@@ -55,10 +55,10 @@ export async function searchPapers(query, limit = 20, retries = 3) {
 
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
-      // Add delay between attempts (exponential backoff)
+      // Add delay between attempts (exponential backoff with longer delays for rate limits)
       if (attempt > 0) {
-        const delay = Math.min(1000 * Math.pow(2, attempt), 5000);
-        console.log(`⏳ Rate limited, waiting ${delay}ms before retry ${attempt + 1}/${retries}...`);
+        const delay = Math.min(2000 * Math.pow(2, attempt), 10000); // Longer delays: 2s, 4s, 8s
+        console.log(`⏳ Waiting ${delay}ms before retry ${attempt + 1}/${retries}...`);
         await sleep(delay);
       }
 

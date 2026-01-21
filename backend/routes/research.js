@@ -91,43 +91,54 @@ router.post('/map/:projectId', async (req, res) => {
         let papers = [];
 
         // ONLY use Semantic Scholar - NO AI generation fallback
+        // Extract concise keywords from the project (avoid long queries that hit rate limits)
+        let searchQuery = project.goal || project.description || project.summary;
+        
+        // If query is too long, extract key terms
+        if (searchQuery.length > 100) {
+            // Extract first sentence or first 50 chars
+            searchQuery = searchQuery.split('.')[0].substring(0, 80);
+        }
+        
         try {
-            const searchQuery = project.summary;
             console.log(`🔍 Searching Semantic Scholar for: "${searchQuery}"`);
             papers = await searchPapers(searchQuery, 20);
 
-            // If Semantic Scholar fails, try a simpler query
+            // If no results, try with just key topic words (first 3-5 words)
             if (papers.length === 0) {
-                console.log('⚠️ No papers found, trying simpler search...');
-                const simpleQuery = project.description.split('.')[0];
-                console.log(`🔍 Trying simpler query: "${simpleQuery}"`);
-                papers = await searchPapers(simpleQuery, 20);
-            }
-            
-            // If still no results, try with just keywords
-            if (papers.length === 0) {
-                const keywords = project.summary.split(' ').slice(0, 5).join(' ');
-                console.log(`🔍 Trying with keywords: "${keywords}"`);
+                console.log('⚠️ No papers found, trying with key terms...');
+                const keywords = searchQuery.split(' ')
+                    .filter(word => word.length > 3) // Remove short words
+                    .slice(0, 4) // Take first 4 meaningful words
+                    .join(' ');
+                console.log(`🔍 Trying keywords: "${keywords}"`);
                 papers = await searchPapers(keywords, 20);
             }
         } catch (error) {
             console.error('⚠️ Semantic Scholar error:', error.message);
+            console.log('💡 Tip: Semantic Scholar may be rate limiting. Wait a few minutes and try again.');
         }
 
         if (papers.length === 0) {
             console.log('❌ No papers found from Semantic Scholar');
             const researchMapId = `research_${req.params.projectId}`;
+            
+            const errorMessage = 'Semantic Scholar returned no results. This could be due to:\n' +
+                '• Rate limiting (too many requests) - Wait 10-15 minutes\n' +
+                '• Very specific search terms - Try broader keywords\n' +
+                '• Connection issues - Check your internet connection';
+            
             researchDB.set(researchMapId, {
                 projectId: req.params.projectId,
                 clusters: [],
                 totalPapers: 0,
                 createdAt: new Date().toISOString(),
-                error: 'No papers found from Semantic Scholar. Try a different research topic or broader keywords.'
+                error: errorMessage
             });
 
             return res.json({
                 success: false,
-                message: 'No papers found from Semantic Scholar. Try a different research topic or broader keywords.',
+                message: errorMessage,
                 clusters: [],
                 totalPapers: 0
             });
