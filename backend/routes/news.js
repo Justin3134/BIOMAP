@@ -144,6 +144,16 @@ Return ONLY valid JSON in this exact format:
 
         console.log(`✅ Generated ${newsData.totalArticles} news articles in ${newsData.categories.length} categories`);
 
+        // Transform AI-generated articles to Google News search links for real news
+        newsData.categories = newsData.categories.map(category => ({
+            ...category,
+            articles: category.articles.map(article => ({
+                ...article,
+                // Replace fake URL with Google News search for real articles on this topic
+                url: `https://news.google.com/search?q=${encodeURIComponent(article.title + ' ' + article.publisher)}`
+            }))
+        }));
+
         // Log category names for debugging
         newsData.categories.forEach(cat => {
             console.log(`   📁 ${cat.label}: ${cat.articles.length} articles`);
