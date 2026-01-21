@@ -298,10 +298,16 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
           </p>
         </section>
 
-        {/* External Link - Only show for real papers with URLs */}
-        {!project.isAIGenerated && (project.url || (project.paperId && !project.paperId.startsWith('ai_generated') && !project.paperId.startsWith('similar_'))) && (
+        {/* External Link */}
+        {project.isAIGenerated === true || 
+         (project.paperId && (project.paperId.startsWith('ai_generated') || project.paperId.startsWith('similar_'))) ? (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground italic">
+            <Lightbulb className="w-4 h-4" />
+            AI-generated research paper (no external link)
+          </div>
+        ) : (
           <a
-            href={project.url || `https://www.semanticscholar.org/paper/${project.paperId || project.id}`}
+            href={project.url || (project.paperId ? `https://www.semanticscholar.org/paper/${project.paperId}` : `https://www.semanticscholar.org/paper/${project.id}`)}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 text-sm text-primary hover:underline"
@@ -309,12 +315,6 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
             <ExternalLink className="w-4 h-4" />
             View original paper on Semantic Scholar
           </a>
-        )}
-        {project.isAIGenerated && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground italic">
-            <Lightbulb className="w-4 h-4" />
-            AI-generated research paper (no external link)
-          </div>
         )}
 
         {/* Tip: Use + button on node to find similar papers */}

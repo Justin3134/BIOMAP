@@ -326,13 +326,34 @@ const Canvas = ({ intake, contextProjects, pinnedEvidenceIds = [] }: CanvasProps
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
 
+  // Handle node content updates
+  const handleUpdateNode = useCallback((nodeId: string, newData: any) => {
+    setNodes((nds) =>
+      nds.map((node) =>
+        node.id === nodeId
+          ? { ...node, data: { ...node.data, ...newData } }
+          : node
+      )
+    );
+  }, [setNodes]);
+
   // Load canvas from localStorage
   useEffect(() => {
     const saved = localStorage.getItem(storageKey);
     if (saved) {
       try {
         const { nodes: savedNodes, edges: savedEdges } = JSON.parse(saved);
-        setNodes(savedNodes || []);
+        
+        // Re-attach onUpdate callbacks to loaded nodes
+        const nodesWithCallbacks = (savedNodes || []).map((node: Node) => ({
+          ...node,
+          data: {
+            ...node.data,
+            onUpdate: (data: any) => handleUpdateNode(node.id, data),
+          },
+        }));
+        
+        setNodes(nodesWithCallbacks);
         setEdges(savedEdges || []);
         console.log(`📍 Loaded canvas with ${savedNodes?.length || 0} nodes`);
         return;
@@ -343,7 +364,7 @@ const Canvas = ({ intake, contextProjects, pinnedEvidenceIds = [] }: CanvasProps
     
     // Initialize with project context
     initializeCanvas();
-  }, [storageKey]);
+  }, [storageKey, handleUpdateNode]);
 
   // Save canvas to localStorage whenever it changes
   useEffect(() => {
@@ -424,17 +445,6 @@ const Canvas = ({ intake, contextProjects, pinnedEvidenceIds = [] }: CanvasProps
     setNodes(initialNodes);
     setEdges(initialEdges);
   }, [intake, contextProjects, setNodes, setEdges]);
-
-  // Handle node content updates
-  const handleUpdateNode = useCallback((nodeId: string, newData: any) => {
-    setNodes((nds) =>
-      nds.map((node) =>
-        node.id === nodeId
-          ? { ...node, data: { ...node.data, ...newData } }
-          : node
-      )
-    );
-  }, [setNodes]);
 
   // Handle adding new nodes
   const handleAddNode = useCallback((type: string) => {
