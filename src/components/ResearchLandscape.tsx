@@ -12,6 +12,7 @@ import {
   NodePositionChange,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import * as d3 from "d3-force";
 
 import UserNode from "./nodes/UserNode";
 import ClusterNode from "./nodes/ClusterNode";
@@ -54,6 +55,10 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
   // Store node positions in localStorage to persist across tab changes
   const storageKey = `biomap-positions-${intake?.projectId || 'default'}`;
   const savedPositionsRef = useRef<Map<string, { x: number; y: number }>>(new Map());
+  
+  // Physics simulation for Obsidian-style bouncy movement
+  const simulationRef = useRef<any>(null);
+  const isDraggingRef = useRef(false);
 
   // Fetch real research map from backend
   useEffect(() => {
@@ -366,9 +371,68 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
     localStorage.setItem(storageKey, JSON.stringify(positions));
   }, [onNodesChange, storageKey]);
 
+  // Obsidian-style physics simulation for bouncy movement
+  useEffect(() => {
+    if (nodes.length === 0 || isLocked || isDraggingRef.current) return;
+
+    const simulation = d3.forceSimulation(nodes as any)
+      .force("charge", d3.forceManyBody().strength(-50)) // Gentle repulsion
+      .force("link", d3.forceLink(edges)
+        .id((d: any) => d.id)
+        .distance(150)
+        .strength(0.1) // Weak spring for subtle effect
+      )
+      .force("collision", d3.forceCollide().radius(60)) // Prevent overlap
+      .alphaDecay(0.05) // Quick settling
+      .velocityDecay(0.4); // Bouncy damping
+
+    simulationRef.current = simulation;
+
+    // Only apply physics when not dragging
+    simulation.on("tick", () => {
+      if (!isDraggingRef.current) {
+        setNodes((nds) =>
+          nds.map((node) => {
+            // Skip user node and cluster nodes from physics
+            if (node.id === 'user' || node.id.startsWith('cluster-')) {
+              return node;
+            }
+            
+            const simNode = simulation.nodes().find((n: any) => n.id === node.id);
+            if (simNode) {
+              return {
+                ...node,
+                position: { 
+                  x: simNode.x || node.position.x, 
+                  y: simNode.y || node.position.y 
+                },
+              };
+            }
+            return node;
+          })
+        );
+      }
+    });
+
+    return () => {
+      simulation.stop();
+    };
+  }, [nodes.length, edges.length, isLocked]);
+
   // Handle cluster node movement - move all children with it (Obsidian-style with smooth animation)
   const handleClusterMove = useCallback((changes: NodeChange[]) => {
     const positionChanges = changes.filter(c => c.type === 'position') as NodePositionChange[];
+    
+    // Track dragging state for physics
+    const dragChange = changes.find((c) => c.type === 'position' && 'dragging' in c);
+    if (dragChange && 'dragging' in dragChange) {
+      isDraggingRef.current = dragChange.dragging || false;
+      
+      // Apply spring effect when released
+      if (!dragChange.dragging && simulationRef.current) {
+        simulationRef.current.alpha(0.3).restart();
+      }
+    }
     
     positionChanges.forEach(change => {
       if (change.id.startsWith('cluster-') && change.position) {
@@ -381,7 +445,7 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
         const deltaX = change.position.x - oldNode.position.x;
         const deltaY = change.position.y - oldNode.position.y;
         
-        // Move all project nodes in this cluster smoothly
+        // Move all project nodes in this cluster smoothly with bounce
         setNodes(nds => nds.map(node => {
           if (node.type === 'projectNode') {
             const project = (node.data as any).project;
@@ -392,10 +456,10 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
                   x: node.position.x + deltaX,
                   y: node.position.y + deltaY,
                 },
-                // Add smooth transition
+                // Add bouncy transition (Obsidian-style!)
                 style: {
                   ...node.style,
-                  transition: change.dragging ? 'none' : 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  transition: change.dragging ? 'none' : 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)', // Bouncy!
                 },
               };
             }
@@ -415,7 +479,7 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
                     },
                     style: {
                       ...node.style,
-                      transition: change.dragging ? 'none' : 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      transition: change.dragging ? 'none' : 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)', // Bouncy!
                     },
                   };
                 }

@@ -4,8 +4,8 @@ import WorkspaceSidebar from "./WorkspaceSidebar";
 import ResearchLandscape from "./ResearchLandscape";
 import PinnedEvidence from "./PinnedEvidence";
 import ChatSidebar from "./ChatSidebar";
-import Canvas from "./Canvas";
-import RichNotesEditor from "./RichNotesEditor";
+import Canvas from "./CanvasWithPhysics";
+import AdvancedNotesEditor from "./AdvancedNotesEditor";
 import { ProjectIntake, WorkspaceState, DecisionLogEntry, PinnedEvidence as PinnedEvidenceType } from "@/types/workspace";
 import { ResearchProject } from "@/types/research";
 import { FileText, Save } from "lucide-react";
@@ -102,9 +102,9 @@ const WorkspaceLayout = ({ intake, onReset, onUpdateIntake }: WorkspaceLayoutPro
     setChatContext(prev => prev.filter(p => p.id !== projectId));
   }, []);
 
-  // Notes page component with rich text editor
+  // Notes page component with advanced research editor
   const NotesPage = () => (
-    <RichNotesEditor
+    <AdvancedNotesEditor
       value={workspaceState.notes}
       onChange={(value) => setWorkspaceState(prev => ({ ...prev, notes: value }))}
       projectTitle={intake.title}
