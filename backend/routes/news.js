@@ -36,8 +36,11 @@ For each article, provide:
 - publisher: Actual news source (e.g., "The New York Times", "Nature News", "TechCrunch", "Science Daily", "Reuters", "Bloomberg", "The Guardian", "MIT Technology Review", "IEEE Spectrum")
 - date: Recent publication date (format: "YYYY-MM-DD", between Jan 2023 and Jan 2024)
 - url: Realistic URL format for that publisher (e.g., "https://www.nytimes.com/2024/01/article-slug", "https://techcrunch.com/2024/01/15/article-slug")
-- summary: 2-3 sentence summary of what the article covers
-- takeaway: One key insight or finding (1 sentence, clear and actionable)
+- whatHappened: 1-2 sentence factual summary of what occurred
+- whyItMatters: Array of 2-4 bullet points about impact on research direction, funding, regulation, adoption, public risk
+- keyClaims: Array of 3-5 claims from the article (each as a string)
+- whatToWatch: Array of 2-3 upcoming events, trials, policy decisions, or expected milestones
+- relationToTopic: 2-3 sentences explaining how this relates to the research topic
 - category: Which aspect/angle this article covers
 
 Group the articles into 5 distinct, meaningful aspects/categories that provide different perspectives on the topic (e.g., "Clinical Trials & Studies", "Market Impact & Investment", "Regulatory & Policy Updates", "Scientific Breakthroughs", "Industry Adoption & Implementation").
@@ -57,8 +60,25 @@ Return ONLY valid JSON in this exact format:
           "publisher": "Nature News",
           "date": "2024-01-15",
           "url": "https://www.nature.com/articles/d41586-024-00123-4",
-          "summary": "A Phase III clinical trial of a novel cancer immunotherapy has shown an unprecedented 80% success rate in treating advanced melanoma. The treatment combines checkpoint inhibitors with personalized vaccine therapy. Researchers attribute the success to improved patient selection and combination protocols.",
-          "takeaway": "New immunotherapy combination achieves 80% success rate in melanoma treatment, marking significant progress in cancer care.",
+          "whatHappened": "A Phase III clinical trial of a novel cancer immunotherapy has shown an unprecedented 80% success rate in treating advanced melanoma.",
+          "whyItMatters": [
+            "Could shift standard of care for melanoma treatment globally",
+            "Likely to accelerate FDA approval for combination therapies",
+            "May attract significant venture capital to similar approaches",
+            "Raises questions about equitable access due to high treatment costs"
+          ],
+          "keyClaims": [
+            "80% of trial participants showed complete tumor regression after 6 months",
+            "Treatment combines PD-1 checkpoint inhibitors with personalized neoantigen vaccines",
+            "Side effects were manageable in 95% of patients",
+            "Cost estimated at $250,000 per patient for full treatment course"
+          ],
+          "whatToWatch": [
+            "FDA expedited review decision expected by March 2024",
+            "European Medicines Agency filing planned for Q2 2024",
+            "Phase IV real-world efficacy study launching in 50 hospitals"
+          ],
+          "relationToTopic": "This breakthrough directly relates to your research by demonstrating the clinical viability of immunotherapy combinations. The success rate validates the approach and suggests similar methodologies could be applied to other cancer types.",
           "category": "Clinical Trials & Studies"
         }
       ]

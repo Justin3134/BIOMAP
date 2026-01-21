@@ -575,13 +575,23 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
     }
   }, [onNodesChange, storageKey]);
 
-  // Handle cluster node movement - move all children with it (Obsidian-style with smooth animation)
+  // Handle cluster/category node movement - move all children with it (works for both modes)
   const handleClusterMove = useCallback((changes: NodeChange[]) => {
     const positionChanges = changes.filter(c => c.type === 'position') as NodePositionChange[];
     
     positionChanges.forEach(change => {
-      if (change.id.startsWith('cluster-') && change.position) {
-        const clusterId = change.id.replace('cluster-', '');
+      const isClusterNode = change.id.startsWith('cluster-');
+      const isCategoryNode = change.id.startsWith('cat_'); // News mode categories
+      
+      // Handle both scholars clusters and news categories
+      if ((isClusterNode || isCategoryNode) && change.position) {
+        let nodeId: string;
+        
+        if (isClusterNode) {
+          nodeId = change.id.replace('cluster-', '');
+        } else {
+          nodeId = change.id; // Keep category ID as-is (cat_1, cat_2, etc.)
+        }
         
         // Find the original position
         const oldNode = nodes.find(n => n.id === change.id);
@@ -590,18 +600,18 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
         const deltaX = change.position.x - oldNode.position.x;
         const deltaY = change.position.y - oldNode.position.y;
         
-        // Move all project nodes in this cluster smoothly
+        // Move children nodes based on mode
         setNodes(nds => nds.map(node => {
-          if (node.type === 'projectNode') {
+          // Scholars mode: move project nodes in this cluster
+          if (isClusterNode && node.type === 'projectNode') {
             const project = (node.data as any).project;
-            if (project && project.cluster === clusterId) {
+            if (project && project.cluster === nodeId) {
               return {
                 ...node,
                 position: {
                   x: node.position.x + deltaX,
                   y: node.position.y + deltaY,
                 },
-                // Add smooth transition
                 style: {
                   ...node.style,
                   transition: change.dragging ? 'none' : 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -615,7 +625,7 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
               const parentNode = nds.find(n => n.id === `project-${parentId}`);
               if (parentNode) {
                 const parentProject = (parentNode.data as any).project;
-                if (parentProject && parentProject.cluster === clusterId) {
+                if (parentProject && parentProject.cluster === nodeId) {
                   return {
                     ...node,
                     position: {
@@ -631,6 +641,25 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
               }
             }
           }
+          
+          // News mode: move article nodes in this category
+          if (isCategoryNode && node.type === 'newsNode') {
+            const article = (node.data as any).article;
+            if (article && article.categoryId === nodeId) {
+              return {
+                ...node,
+                position: {
+                  x: node.position.x + deltaX,
+                  y: node.position.y + deltaY,
+                },
+                style: {
+                  ...node.style,
+                  transition: change.dragging ? 'none' : 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                },
+              };
+            }
+          }
+          
           return node;
         }));
       }
@@ -850,6 +879,10 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
         <NewsDetailPanel
           article={selectedArticle}
           onClose={() => setSelectedArticle(null)}
+          onAddToContext={onAddToContext}
+          isInContext={chatContext.some(p => p.id === selectedArticle.articleId)}
+          onPinEvidence={onPinEvidence}
+          isPinnedEvidence={pinnedEvidenceIds.includes(selectedArticle.articleId)}
         />
       )}
 

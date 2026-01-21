@@ -61,17 +61,17 @@ const ProjectNode = memo(({ data }: ProjectNodeProps) => {
       <Handle
         type="source"
         position={Position.Bottom}
-        className="!w-2 !h-2 !bg-node-project-border !border-2 !border-card"
+        className="!w-2 !h-2 !bg-gray-400 !border-2 !border-card"
       />
 
       <div
         onClick={() => onSelect(project)}
         className={`
-          bg-node-project border rounded-xl px-4 py-3 max-w-[200px] text-left node-card cursor-pointer
+          bg-card border rounded-xl px-4 py-3 max-w-[200px] text-left node-card cursor-pointer
           transition-all duration-200
           ${isSelected 
             ? 'border-primary border-2 ring-4 ring-primary/10' 
-            : 'border-node-project-border hover:border-primary/50'
+            : 'border-border hover:border-primary/50'
           }
         `}
       >

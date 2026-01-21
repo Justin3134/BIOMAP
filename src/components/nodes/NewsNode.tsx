@@ -29,7 +29,7 @@ const NewsNode = memo(({ data }: NewsNodeProps) => {
 
   return (
     <div className="relative group">
-      <Handle type="target" position={Position.Top} className="!bg-yellow-500" />
+      <Handle type="target" position={Position.Top} className="!bg-gray-400" />
       
       <div
         onClick={() => onSelect(article)}
@@ -37,18 +37,18 @@ const NewsNode = memo(({ data }: NewsNodeProps) => {
           px-4 py-3 rounded-lg border-2 cursor-pointer
           transition-all duration-200 min-w-[220px] max-w-[280px]
           ${isSelected 
-            ? 'bg-yellow-50 dark:bg-yellow-950 border-yellow-500 shadow-lg scale-105' 
-            : 'bg-yellow-50/50 dark:bg-yellow-950/30 border-yellow-400 hover:border-yellow-500 hover:shadow-md'
+            ? 'bg-card border-primary shadow-lg scale-105 ring-4 ring-primary/10' 
+            : 'bg-card border-border hover:border-primary/50 hover:shadow-md'
           }
         `}
       >
         <div className="flex items-start gap-2">
-          <Newspaper className="w-4 h-4 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
+          <Newspaper className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
           <div className="flex-1 min-w-0">
-            <h3 className="font-medium text-sm text-yellow-900 dark:text-yellow-100 leading-tight mb-1 line-clamp-2">
+            <h3 className="font-medium text-sm text-foreground leading-tight mb-1 line-clamp-2">
               {article.title}
             </h3>
-            <div className="flex items-center gap-2 text-xs text-yellow-700 dark:text-yellow-300 mb-1">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
               <span className="font-medium truncate">{article.publisher}</span>
               <span>•</span>
               <span className="whitespace-nowrap">
@@ -59,14 +59,14 @@ const NewsNode = memo(({ data }: NewsNodeProps) => {
                 })}
               </span>
             </div>
-            <p className="text-xs text-yellow-800 dark:text-yellow-200 line-clamp-2 leading-relaxed">
+            <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
               {article.takeaway}
             </p>
           </div>
         </div>
       </div>
 
-      <Handle type="source" position={Position.Bottom} className="!bg-yellow-500" />
+      <Handle type="source" position={Position.Bottom} className="!bg-gray-400" />
     </div>
   );
 });
