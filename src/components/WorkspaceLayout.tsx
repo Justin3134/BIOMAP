@@ -102,11 +102,16 @@ const WorkspaceLayout = ({ intake, onReset, onUpdateIntake }: WorkspaceLayoutPro
     setChatContext(prev => prev.filter(p => p.id !== projectId));
   }, []);
 
+  // Memoized notes change handler to prevent editor losing focus
+  const handleNotesChange = useCallback((value: string) => {
+    setWorkspaceState(prev => ({ ...prev, notes: value }));
+  }, []);
+
   // Notes page component with advanced research editor
   const NotesPage = () => (
     <AdvancedNotesEditor
       value={workspaceState.notes}
-      onChange={(value) => setWorkspaceState(prev => ({ ...prev, notes: value }))}
+      onChange={handleNotesChange}
       projectTitle={intake.title}
     />
   );

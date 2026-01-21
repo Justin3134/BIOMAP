@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { ResearchProject } from "@/types/research";
 import { X, ExternalLink, CheckCircle, XCircle, Lightbulb, Link2, MessageSquare, Pin, Loader2, Plus, ChevronDown, ChevronUp } from "lucide-react";
 import { researchAPI } from "@/lib/api";
+import { Button } from "./ui/button";
 
 interface DetailPanelProps {
   project: ResearchProject | null;
@@ -19,6 +20,8 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
   const [askButtonPosition, setAskButtonPosition] = useState({ x: 0, y: 0 });
   const [evidence, setEvidence] = useState<any>(null);
   const [isLoadingEvidence, setIsLoadingEvidence] = useState(false);
+  const [justPinned, setJustPinned] = useState(false);
+  const [justAddedToChat, setJustAddedToChat] = useState(false);
 
   const handleTextSelection = useCallback(() => {
     const selection = window.getSelection();
@@ -144,52 +147,79 @@ const DetailPanel = ({ project, onClose, onAddToContext, onAskAboutText, isInCon
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-2 mb-4">
-        {onAddToContext && (
-          <button
-            onClick={() => onAddToContext(project)}
-            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-colors ${
-              isInContext
-                ? "bg-primary/10 text-primary border border-primary/20"
-                : "bg-secondary hover:bg-secondary/80 text-foreground"
-            }`}
-          >
-            {isInContext ? (
-              <CheckCircle className="w-4 h-4" />
-            ) : (
+      {(onAddToContext || onPinEvidence) && (
+        <div className="flex gap-2 mb-4">
+          {onAddToContext && (
+            <Button
+              onClick={() => {
+                onAddToContext(project);
+                if (!isInContext) {
+                  setJustAddedToChat(true);
+                  setTimeout(() => setJustAddedToChat(false), 2000);
+                }
+              }}
+              variant={isInContext ? "secondary" : "default"}
+              size="sm"
+              className={`flex items-center gap-2 transition-all ${
+                justAddedToChat ? 'ring-2 ring-primary ring-offset-2' : ''
+              }`}
+            >
               <MessageSquare className="w-4 h-4" />
-            )}
-            <span className="text-xs font-medium">{isInContext ? "In Context" : "Add to Chat"}</span>
-          </button>
-        )}
-        
-        {onPinEvidence && (
-          <button
-            onClick={() => onPinEvidence(project)}
-            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-colors ${
-              isPinnedEvidence
-                ? "bg-primary/10 text-primary border border-primary/20"
-                : "bg-secondary hover:bg-secondary/80 text-foreground"
-            }`}
-          >
-            <Pin className="w-4 h-4" />
-            <span className="text-xs font-medium">{isPinnedEvidence ? "Unpin" : "Pin Evidence"}</span>
-          </button>
-        )}
-      </div>
+              {justAddedToChat ? (
+                <span className="font-semibold">Added! ✓</span>
+              ) : isInContext ? (
+                "In Chat Context"
+              ) : (
+                "Add to Chat"
+              )}
+            </Button>
+          )}
+
+          {onPinEvidence && (
+            <Button
+              onClick={() => {
+                onPinEvidence(project);
+                if (!isPinnedEvidence) {
+                  setJustPinned(true);
+                  setTimeout(() => setJustPinned(false), 2000);
+                }
+              }}
+              variant={isPinnedEvidence ? "secondary" : "outline"}
+              size="sm"
+              className={`flex items-center gap-2 transition-all ${
+                justPinned ? 'ring-2 ring-primary ring-offset-2' : ''
+              }`}
+            >
+              <Pin className={`w-4 h-4 ${isPinnedEvidence ? 'fill-current' : ''}`} />
+              {justPinned ? (
+                <span className="font-semibold">Pinned! ✓</span>
+              ) : isPinnedEvidence ? (
+                "Pinned to Evidence"
+              ) : (
+                "Pin Evidence"
+              )}
+            </Button>
+          )}
+        </div>
+      )}
 
       {/* Similarity indicator */}
-      <div className="bg-secondary rounded-lg p-3 mb-6">
+      <div className="bg-secondary border border-border rounded-lg p-4 mb-6">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-medium text-muted-foreground">Similarity to your idea</span>
-          <span className="text-sm font-semibold text-primary">{similarityPercent}%</span>
+          <h3 className="font-semibold text-sm text-foreground">
+            Similarity to Your Idea
+          </h3>
+          <span className="text-lg font-bold text-primary">{similarityPercent}%</span>
         </div>
-        <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+        <div className="w-full h-2.5 bg-muted rounded-full overflow-hidden mb-2">
           <div 
             className="h-full bg-primary rounded-full transition-all duration-500"
             style={{ width: `${similarityPercent}%` }}
           />
         </div>
+        <p className="text-xs text-muted-foreground">
+          This paper is <span className="font-semibold text-foreground">{similarityPercent}%</span> relevant to your research idea
+        </p>
       </div>
 
       {/* Sections */}

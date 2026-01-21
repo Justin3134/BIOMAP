@@ -288,10 +288,6 @@ Tip: Use headings (Ctrl/Cmd + Alt + 1-6) to structure your document"
       <div className="px-6 py-3 border-t border-border bg-card/50">
         <div className="max-w-6xl mx-auto flex items-center justify-between text-xs text-muted-foreground">
           <div className="flex items-center gap-6">
-            <span>💡 <strong>Tip:</strong> Use Cmd/Ctrl + B for bold, Cmd/Ctrl + I for italic</span>
-            <span>📝 Auto-saves every second</span>
-            <span>📤 Export to HTML, Markdown, or Plain Text</span>
-          </div>
           <div className="flex items-center gap-4">
             <span>{wordCount} words</span>
             <span>•</span>

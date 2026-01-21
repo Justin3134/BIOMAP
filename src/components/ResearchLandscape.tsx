@@ -752,15 +752,27 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
     setEdges(initialEdges);
   }, [initialNodes, initialEdges, setNodes, setEdges]);
 
-  // Update nodes when view mode changes
+  // Update nodes when view mode changes (preserve saved positions)
   useEffect(() => {
-    if (viewMode === 'news') {
-      setNodes(newsNodes);
-      setEdges(newsEdges);
-    } else {
-      setNodes(initialNodes);
-      setEdges(initialEdges);
-    }
+    const targetNodes = viewMode === 'news' ? newsNodes : initialNodes;
+    const targetEdges = viewMode === 'news' ? newsEdges : initialEdges;
+    
+    // Apply saved positions when switching modes
+    const nodesWithSavedPositions = targetNodes.map(node => {
+      const savedPos = savedPositionsRef.current.get(node.id);
+      if (savedPos) {
+        return {
+          ...node,
+          position: savedPos
+        };
+      }
+      return node;
+    });
+    
+    setNodes(nodesWithSavedPositions);
+    setEdges(targetEdges);
+    
+    console.log(`🔄 Switched to ${viewMode} mode with ${nodesWithSavedPositions.length} nodes (${Array.from(savedPositionsRef.current.keys()).filter(k => targetNodes.some(n => n.id === k)).length} positions restored)`);
   }, [viewMode, newsNodes, newsEdges, initialNodes, initialEdges, setNodes, setEdges]);
 
   // Update nodes when selection or pins change
