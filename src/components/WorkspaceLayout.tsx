@@ -4,6 +4,7 @@ import WorkspaceSidebar from "./WorkspaceSidebar";
 import ResearchLandscape from "./ResearchLandscape";
 import PinnedEvidence from "./PinnedEvidence";
 import ChatSidebar from "./ChatSidebar";
+import Canvas from "./Canvas";
 import { ProjectIntake, WorkspaceState, DecisionLogEntry, PinnedEvidence as PinnedEvidenceType } from "@/types/workspace";
 import { ResearchProject } from "@/types/research";
 import { FileText, Save } from "lucide-react";
@@ -349,6 +350,13 @@ const WorkspaceLayout = ({ intake, onReset, onUpdateIntake }: WorkspaceLayoutPro
                 pinnedEvidenceIds={workspaceState.pinnedEvidence.map(e => e.projectId)}
                 chatContext={chatContext}
                 onAddToContext={handleAddToContext}
+              />
+            } />
+            <Route path="canvas" element={
+              <Canvas
+                intake={intake}
+                contextProjects={chatContext}
+                pinnedEvidenceIds={workspaceState.pinnedEvidence.map(e => e.projectId)}
               />
             } />
             <Route path="evidence" element={

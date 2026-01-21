@@ -5,13 +5,15 @@ import {
   Pin, 
   FileText,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Layers
 } from "lucide-react";
 import { useState } from "react";
 
 const NAV_ITEMS = [
   { path: "overview", label: "Overview", icon: LayoutDashboard },
   { path: "map", label: "Research Map", icon: Map },
+  { path: "canvas", label: "Canvas", icon: Layers },
   { path: "evidence", label: "Pinned Evidence", icon: Pin },
   { path: "notes", label: "Notes", icon: FileText },
 ];
