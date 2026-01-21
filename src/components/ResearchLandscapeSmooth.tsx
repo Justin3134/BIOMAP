@@ -517,9 +517,9 @@ const ResearchLandscape = ({ userQuery, onReset, intake, onPinEvidence, pinnedEv
         )}
 
         {/* Insight Panels */}
-        <InsightPanel projects={researchProjects} />
-        <NoveltyRadar projects={researchProjects} />
-        <FeasibilityPanel projects={researchProjects} />
+        <InsightPanel clusters={researchClusters} projects={researchProjects} />
+        <NoveltyRadar clusters={researchClusters} projects={researchProjects} />
+        <FeasibilityPanel clusters={researchClusters} projects={researchProjects} />
       </div>
 
       {/* Legend */}

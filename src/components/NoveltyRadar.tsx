@@ -18,6 +18,11 @@ interface ClusterNovelty {
 const NoveltyRadar = ({ clusters, projects }: NoveltyRadarProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
+  // Safety check
+  if (!clusters || !projects || clusters.length === 0) {
+    return null;
+  }
+
   // Calculate novelty scores per cluster
   const clusterNovelty: ClusterNovelty[] = clusters.map(cluster => {
     const clusterProjects = projects.filter(p => p.cluster === cluster.id);

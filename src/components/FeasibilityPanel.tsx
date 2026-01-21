@@ -53,6 +53,11 @@ const FeasibilityPanel = ({ clusters, projects }: FeasibilityPanelProps) => {
     );
   };
 
+  // Safety check
+  if (!clusters || !projects || clusters.length === 0) {
+    return null;
+  }
+
   // Calculate feasibility per cluster
   const clusterFeasibility: ClusterFeasibility[] = clusters.map(cluster => {
     const clusterProjects = projects.filter(p => p.cluster === cluster.id);

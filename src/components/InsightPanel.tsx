@@ -12,6 +12,11 @@ const InsightPanel = ({ clusters, projects }: InsightPanelProps) => {
 
   // Generate insights from actual research data
   const insights = useMemo(() => {
+    // Safety check
+    if (!clusters || !projects || clusters.length === 0 || projects.length === 0) {
+      return { patterns: [], suggestions: ["No data available yet"] };
+    }
+    
     // Find common patterns across clusters
     const patterns = clusters.map(cluster => {
       const clusterProjects = projects.filter(p => p.cluster === cluster.id);
